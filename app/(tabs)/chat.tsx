@@ -17,7 +17,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { MatchLogForm } from '@/components/chat/MatchLogForm';
 import { MessageActionSheet } from '@/components/chat/MessageActionSheet';
 import { MessageBubble } from '@/components/chat/MessageBubble';
-import { stripMatchPrep } from '@/components/chat/marcoTokens';
+import { parseFinalMessage, type LessonRef } from '@/components/chat/marcoTokens';
 import { StreamingBubble } from '@/components/chat/StreamingBubble';
 import { LockedBottomSheet } from '@/components/lessons/LockedBottomSheet';
 import { PreparationSheet } from '@/components/preparation/PreparationSheet';
@@ -41,14 +41,6 @@ import type {
 const BG = '#F5F0EA';
 const PAGE_SIZE = 30;
 
-// Mirrors the server-side regex (internal/marco/lesson_refs.go): id is the
-// slug from the curriculum (letters, digits, _, -), title is wrapped in
-// double quotes. Capturing the quoted form lets us strip the quotes cleanly
-// instead of carrying them into the rendered card title.
-const LESSON_REF_RE = /\[LESSON_REF:\s*([a-zA-Z0-9_-]+)\s*\|\s*"([^"]+)"\s*\]/g;
-const MATCH_LOG_RE = /\[MATCH_LOG:\s*\{[^}]+\}\s*\]/g;
-
-type LessonRef = { id: string; title: string };
 type LocalMessage = ChatMessage & {
   isStreaming?: boolean;
   lessonRefs?: LessonRef[];
@@ -72,14 +64,6 @@ function isPersistedMessageId(id: string): boolean {
   return UUID_RE.test(id);
 }
 
-function parseLessonRefs(text: string): { clean: string; refs: LessonRef[] } {
-  const refs: LessonRef[] = [];
-  const clean = text.replace(LESSON_REF_RE, (_match, id, title) => {
-    refs.push({ id: id.trim(), title: title.trim() });
-    return '';
-  }).trim();
-  return { clean, refs };
-}
 
 function isSameDay(a: string, b: string): boolean {
   const da = new Date(a);
@@ -289,8 +273,7 @@ export default function ChatScreen() {
       return;
     }
 
-    const cleaned = stripMatchPrep(accumulated.replace(MATCH_LOG_RE, '')).trim();
-    const { clean, refs } = parseLessonRefs(cleaned);
+    const { clean, refs } = parseFinalMessage(accumulated);
     const assistantId = realIds?.assistantMessageId ?? `${Date.now()}-a`;
     const assistantMsg: LocalMessage = {
       id: assistantId,

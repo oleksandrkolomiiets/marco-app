@@ -60,6 +60,11 @@ Marco is a React Native app for AI-coached padel training. Follow these rules st
 - All React Query errors surface through the shared `ErrorBanner` component in `src/components/ui/ErrorBanner.tsx`. Mutations and queries that can fail visibly should render `<ErrorBanner error={query.error} />` or feed into a global banner slot.
 - `console.log` / `console.error` alone is not error handling. The user must see the failure.
 
+## Marco token grammar
+
+- All parsing/stripping of Marco's inline tokens (`[LESSON_REF: …]`, `[MATCH_LOG: …]`, `[MATCH_PREP: …]`) lives in `src/components/chat/marcoTokens.ts` — never write a token regex anywhere else.
+- `src/components/chat/token_fixtures.json` is the shared grammar contract. An IDENTICAL copy lives in the marco-api repo at `internal/marco/testdata/token_fixtures.json`, and both repos' test suites run their parsers against it. Changing the grammar means updating marco-api's `internal/marco/prompt.md`, the fixture file in BOTH repos, and both implementations in the same change — CI on either side fails if they drift.
+
 ## Images & video
 - Images: use `expo-image` (`<Image />` from `expo-image`). Never `Image` from `react-native`.
 - Video: use `expo-video` (`useVideoPlayer` + `<VideoView />`). Never `expo-av` (deprecated, removed from this codebase), the bare RN video shim, or a third-party player.

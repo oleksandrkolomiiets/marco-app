@@ -1,6 +1,36 @@
-// Strippers for the inline tokens Marco emits ([LESSON_REF: …],
-// [MATCH_LOG: …], [MATCH_PREP: …]) shared by the chat screen (finalization)
+// Parsers and strippers for the inline tokens Marco emits ([LESSON_REF: …],
+// [MATCH_LOG: …], [MATCH_PREP: …]), used by the chat screen (finalization)
 // and StreamingBubble (mid-stream display).
+//
+// The grammar is shared with the Go backend (marco-api internal/marco/) and
+// pinned by token_fixtures.json — an IDENTICAL copy lives in both repos and
+// both test suites run their implementation against it. Change the grammar
+// only by updating prompt.md, the fixtures, and BOTH implementations.
+
+export type LessonRef = { id: string; title: string };
+
+// Mirrors the server-side regex (marco-api internal/marco/lesson_refs.go):
+// id is the curriculum slug (letters, digits, _, -), title is wrapped in
+// double quotes. Capturing the quoted form lets us strip the quotes cleanly
+// instead of carrying them into the rendered card title.
+export const LESSON_REF_RE = /\[LESSON_REF:\s*([a-zA-Z0-9_-]+)\s*\|\s*"([^"]+)"\s*\]/g;
+export const MATCH_LOG_RE = /\[MATCH_LOG:\s*\{[^}]+\}\s*\]/g;
+
+export function parseLessonRefs(text: string): { clean: string; refs: LessonRef[] } {
+  const refs: LessonRef[] = [];
+  const clean = text.replace(LESSON_REF_RE, (_match, id: string, title: string) => {
+    refs.push({ id: id.trim(), title: title.trim() });
+    return '';
+  }).trim();
+  return { clean, refs };
+}
+
+// parseFinalMessage turns Marco's raw final text into what the chat renders:
+// every token removed, lesson refs extracted for the tappable cards. This is
+// the client counterpart of the server's marco.CleanContent + ParseLessonRefs.
+export function parseFinalMessage(text: string): { clean: string; refs: LessonRef[] } {
+  return parseLessonRefs(stripMatchPrep(text.replace(MATCH_LOG_RE, '')));
+}
 
 // Streaming-friendly: matches the token even if the closing bracket hasn't
 // streamed in yet, so the raw "[LESSON_REF: ..." never flickers.
