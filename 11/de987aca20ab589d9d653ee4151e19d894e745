@@ -1,0 +1,28 @@
+app/(tabs)/chat.tsx
+  s_ab8e6d841a526d::t_d8b7c417515a08 20
+  s_ab8e6d841a526d::t_2b307d3867da1b 276
+CLAUDE.md
+  s_ab8e6d841a526d::t_953e46357ad242 63-67
+src/components/chat/token_fixtures.test.ts
+  s_ab8e6d841a526d::t_31c5a8924efffd 1-37
+src/components/chat/marcoTokens.ts
+  s_ab8e6d841a526d::t_224faa25b19459 1-2,4-33
+src/components/chat/token_fixtures.json
+  s_ab8e6d841a526d::t_39abd100a385d7 1-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "11de987aca20ab589d9d653ee4151e19d894e745",
+  "prompts": {},
+  "sessions": {
+    "s_ab8e6d841a526d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2945ebf1-87f1-4b36-938d-0dfec0928402",
+        "model": "claude-fable-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
