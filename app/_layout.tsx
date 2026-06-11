@@ -1,0 +1,102 @@
+import '../global.css';
+import { useEffect } from 'react';
+import { Redirect, Stack, useSegments } from 'expo-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+} from '@expo-google-fonts/instrument-serif';
+import { Caveat_400Regular } from '@expo-google-fonts/caveat';
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_700Bold,
+} from '@expo-google-fonts/jetbrains-mono';
+import { useAuthStore } from '@/stores/authStore';
+
+void SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function AuthGate() {
+  const segments = useSegments();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+
+  const first = segments[0];
+  const inAuthGroup = first === '(auth)';
+  const onOnboarding = inAuthGroup && segments[1] === 'onboarding';
+  const onWelcome = inAuthGroup && segments[1] === 'welcome';
+  const onLogin = inAuthGroup && segments[1] === 'login';
+  const onSignIn = inAuthGroup && segments[1] === 'signin';
+  const onSignUp = inAuthGroup && segments[1] === 'signup';
+
+  if (!isAuthenticated) {
+    if (onWelcome || onLogin || onSignIn || onSignUp) return null;
+    return <Redirect href="/(auth)/welcome" />;
+  }
+
+  if (!user?.skill_level) {
+    if (onOnboarding) return null;
+    return <Redirect href="/(auth)/onboarding" />;
+  }
+
+  // Authenticated users can revisit onboarding to edit goal/court-side — every
+  // other auth route stays gated.
+  if (inAuthGroup && !onOnboarding) return <Redirect href="/(tabs)" />;
+  return null;
+}
+
+export default function RootLayout() {
+  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
+  const isLoading = useAuthStore((s) => s.isLoading);
+
+  const [fontsLoaded] = useFonts({
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
+    Caveat_400Regular,
+    JetBrainsMono_400Regular,
+    JetBrainsMono_700Bold,
+  });
+
+  useEffect(() => {
+    void loadFromStorage();
+  }, [loadFromStorage]);
+
+  useEffect(() => {
+    if (fontsLoaded && !isLoading) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, isLoading]);
+
+  if (!fontsLoaded || isLoading) return null;
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <AuthGate />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="lessons/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="matches" options={{ headerShown: false }} />
+          <Stack.Screen name="match-preparation" options={{ headerShown: false }} />
+          <Stack.Screen name="exam/index" options={{ headerShown: false }} />
+          <Stack.Screen name="exam/results" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </SafeAreaProvider>
+    </QueryClientProvider>
+  );
+}

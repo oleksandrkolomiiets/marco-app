@@ -1,0 +1,16 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+.env
+.env.local
+.DS_Store
+expo-env.d.ts
+.idea/
+.vscode/
+ios/
+android/
+
+# Claude Code personal settings
+.claude/settings.local.json

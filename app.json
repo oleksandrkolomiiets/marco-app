@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Marco",
+    "slug": "marco-app",
+    "scheme": "marco",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.marco.app"
+    },
+    "android": {
+      "package": "com.marco.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F4C5C"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font",
+      "expo-web-browser",
+      "expo-video"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ebc026de-f2fc-4c39-8bde-ae76128158f3"
+      }
+    },
+    "owner": "oleksandrkolomiietspros-organization"
+  }
+}
