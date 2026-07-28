@@ -1,8 +1,10 @@
 import type { ChatMessage, MatchLogPrefill, MatchPrepPrefill } from '@/types/api';
 import { useAuthStore } from '@/stores/authStore';
-import { api } from './client';
+import { api, refreshSession } from './client';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
+
+const SESSION_EXPIRED = 'Your session expired — please sign in again.';
 
 export type SendMessageIDs = { userMessageId: string; assistantMessageId: string };
 export type SendMessageChunk =
@@ -14,8 +16,6 @@ export type SendMessageChunk =
 // React Native's fetch does not expose response.body as a ReadableStream, so
 // we use XMLHttpRequest with onprogress to consume the SSE stream incrementally.
 export async function* sendMessage(message: string): AsyncGenerator<SendMessageChunk> {
-  const token = useAuthStore.getState().accessToken;
-
   type QueueItem =
     | { text: string }
     | { matchLog: MatchLogPrefill }
@@ -41,16 +41,12 @@ export async function* sendMessage(message: string): AsyncGenerator<SendMessageC
     }
   };
 
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', `${API_URL}/api/v1/chat`);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-
   let processed = 0;
   let buffer = '';
   let currentEvent = '';
+  let refreshed = false;
 
-  const processChunk = () => {
+  const processChunk = (xhr: XMLHttpRequest) => {
     if (finished) return;
     const newText = xhr.responseText.slice(processed);
     processed = xhr.responseText.length;
@@ -108,27 +104,59 @@ export async function* sendMessage(message: string): AsyncGenerator<SendMessageC
     }
   };
 
-  xhr.onprogress = processChunk;
-  xhr.onload = () => {
-    if (xhr.status < 200 || xhr.status >= 300) {
-      finished = true;
-      // XHR bypasses the axios 401-refresh interceptor, so handle auth death
-      // here: clear the session and let the root layout redirect to welcome.
-      if (xhr.status === 401) {
-        useAuthStore.getState().clearAuth();
-        push({ error: 'Your session expired — please sign in again.' });
+  const body = JSON.stringify({ message });
+
+  const openStream = (accessToken: string | null) => {
+    // Every attempt parses its own response from the start.
+    processed = 0;
+    buffer = '';
+    currentEvent = '';
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_URL}/api/v1/chat`);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    if (accessToken) xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+
+    xhr.onprogress = () => processChunk(xhr);
+    xhr.onload = () => {
+      if (xhr.status < 200 || xhr.status >= 300) {
+        // A 401 here is nearly always the short-lived access token expiring.
+        // XHR bypasses the axios refresh interceptor, so drive the same shared
+        // refresh and replay the stream once: signing out on the first 401
+        // would throw away the message the user just typed.
+        if (xhr.status === 401 && !refreshed) {
+          refreshed = true;
+          void (async () => {
+            try {
+              openStream(await refreshSession());
+            } catch {
+              // refreshSession already cleared the unusable session.
+              finished = true;
+              push({ error: SESSION_EXPIRED });
+            }
+          })();
+          return;
+        }
+        finished = true;
+        if (xhr.status === 401) {
+          // Rejected again with a freshly minted token — the session is dead.
+          useAuthStore.getState().clearAuth();
+          push({ error: SESSION_EXPIRED });
+          return;
+        }
+        push({ error: `Chat request failed: ${xhr.status}` });
         return;
       }
-      push({ error: `Chat request failed: ${xhr.status}` });
-      return;
-    }
-    processChunk();
-    pushDone();
-  };
-  xhr.onerror = () => { finished = true; push({ error: 'Network error' }); };
-  xhr.ontimeout = () => { finished = true; push({ error: 'Request timed out' }); };
+      processChunk(xhr);
+      pushDone();
+    };
+    xhr.onerror = () => { finished = true; push({ error: 'Network error' }); };
+    xhr.ontimeout = () => { finished = true; push({ error: 'Request timed out' }); };
 
-  xhr.send(JSON.stringify({ message }));
+    xhr.send(body);
+  };
+
+  openStream(useAuthStore.getState().accessToken);
 
   while (true) {
     while (queue.length > 0) {

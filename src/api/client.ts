@@ -29,8 +29,42 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // Shared in-flight refresh promise — prevents concurrent 401s from each
-// launching their own refresh call.
+// launching their own refresh call. The server rotates the refresh token on
+// every call, so two parallel refreshes would revoke each other's token.
 let refreshPromise: Promise<RefreshTokenResponse> | null = null;
+
+/**
+ * Exchange the stored refresh token for a fresh pair, persist it, and return
+ * the new access token. Concurrent callers share one in-flight request.
+ * Clears the session and rethrows if the refresh itself fails.
+ *
+ * Exported because the chat SSE stream talks XHR (React Native's fetch cannot
+ * stream), so it never passes through the response interceptor below and has
+ * to drive the same refresh itself.
+ */
+export async function refreshSession(): Promise<string> {
+  try {
+    const refreshToken = useAuthStore.getState().refreshToken;
+    if (!refreshToken) throw new Error('No refresh token');
+
+    if (!refreshPromise) {
+      refreshPromise = (api.post<RefreshTokenResponse>('/auth/refresh', {
+        refresh_token: refreshToken,
+      }) as Promise<RefreshTokenResponse>).finally(() => {
+        refreshPromise = null;
+      });
+    }
+    const data = await refreshPromise;
+
+    // Always persist the rotated pair — the server already revoked the old
+    // refresh token, so skipping this would strand the client logged out.
+    useAuthStore.getState().updateTokens(data.access_token, data.refresh_token);
+    return data.access_token;
+  } catch (err) {
+    useAuthStore.getState().clearAuth();
+    throw err;
+  }
+}
 
 apiClient.interceptors.response.use(
   (res) => res.data,
@@ -45,24 +79,14 @@ apiClient.interceptors.response.use(
 
       original._retry = true;
       try {
-        const refreshToken = useAuthStore.getState().refreshToken;
-        if (!refreshToken) throw new Error('No refresh token');
-
-        if (!refreshPromise) {
-          refreshPromise = (api.post<RefreshTokenResponse>('/auth/refresh', {
-            refresh_token: refreshToken,
-          }) as Promise<RefreshTokenResponse>).finally(() => {
-            refreshPromise = null;
-          });
-        }
-        const data = await refreshPromise;
-
-        // Always persist the rotated pair — the server already revoked the old
-        // refresh token, so skipping this would strand the client logged out.
-        useAuthStore.getState().updateTokens(data.access_token, data.refresh_token);
-        original.headers.set('Authorization', `Bearer ${data.access_token}`);
+        const accessToken = await refreshSession();
+        original.headers.set('Authorization', `Bearer ${accessToken}`);
+        // Deliberately not awaited: a retry that still 401s should reject as-is
+        // rather than fall into the sign-out below.
         return apiClient(original);
       } catch {
+        // refreshSession has already cleared the session; clearAuth is
+        // idempotent, so this stays as a defensive backstop.
         useAuthStore.getState().clearAuth();
         throw error;
       }
