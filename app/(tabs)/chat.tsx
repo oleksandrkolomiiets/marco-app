@@ -28,6 +28,8 @@ import {
   preparationQueryKey,
   useCreateMatchPreparation,
   useMatchPreparation,
+  useReplaceDrills,
+  useUpdateMatchPreparation,
 } from '@/hooks/usePreparation';
 import type {
   ChatMessage,
@@ -130,9 +132,14 @@ export default function ChatScreen() {
   // hydrated with the original prefill and the user can re-create if they
   // really want — but the typical flow is a single tap.
   const [createdPrepByMessageId, setCreatedPrepByMessageId] = useState<Record<string, string>>({});
+  // Adjust-mode tags append drills, which is not idempotent — remember which
+  // messages have already been applied so a second tap doesn't double them up.
+  const [appliedAdjustMessageIds, setAppliedAdjustMessageIds] = useState<Set<string>>(new Set());
   const [lockedSheetOpen, setLockedSheetOpen] = useState(false);
   const { data: preparationList = [] } = useMatchPreparation();
   const createPreparation = useCreateMatchPreparation();
+  const updatePreparation = useUpdateMatchPreparation();
+  const replaceDrills = useReplaceDrills();
   const accumulatedRef = useRef('');
   // Cursor for upward pagination — the created_at of the oldest message we hold.
   const oldestCursorRef = useRef<string | null>(null);
@@ -395,7 +402,59 @@ export default function ChatScreen() {
   //            prep. Cache the id by message so a second tap doesn't duplicate.
   const handlePrepPress = useCallback((messageId: string, prefill: MatchPrepPrefill) => {
     if (prefill.mode === 'adjust') {
-      if (prefill.id) setOpenPrepId(prefill.id);
+      if (!prefill.id) return;
+      const prepId = prefill.id;
+
+      // The token's note/drills are contractual in adjust mode too — prompt.md
+      // requires the sheet to open with the drill "already pre-added to the
+      // queue". Opening without applying them left the user looking at an
+      // unchanged prep right after Marco said it had been updated.
+      const target = preparationList.find((r) => r.id === prepId);
+      const inlineDrills = prefill.drills ?? [];
+      // Without the cached row we can't append without clobbering the existing
+      // queue, so leave those drills alone rather than risk losing them.
+      const canMergeDrills = inlineDrills.length > 0 && target !== undefined;
+      const alreadyApplied = appliedAdjustMessageIds.has(messageId);
+      if (alreadyApplied || (!prefill.note && !canMergeDrills)) {
+        setOpenPrepId(prepId);
+        return;
+      }
+
+      setAppliedAdjustMessageIds((prev) => new Set([...prev, messageId]));
+      // The sheet snapshots its prep on mount and deliberately won't resync for
+      // the same id (that would clobber in-progress edits), so land the writes
+      // and refresh the cache BEFORE opening it — otherwise it mounts on the
+      // pre-adjust state and the change looks lost.
+      void (async () => {
+        try {
+          await Promise.all([
+            ...(prefill.note
+              ? [updatePreparation.mutateAsync({ id: prepId, data: { note: prefill.note } })]
+              : []),
+            ...(canMergeDrills && target
+              ? [replaceDrills.mutateAsync({
+                  id: prepId,
+                  // PUT replaces the whole queue, so carry existing rows (and
+                  // their done flags) across rather than dropping them.
+                  drills: [
+                    ...target.drills.map((d) => ({
+                      title: d.title,
+                      duration_seconds: d.duration_seconds,
+                      completed: d.completed,
+                    })),
+                    ...inlineDrills,
+                  ],
+                })]
+              : []),
+          ]);
+          await queryClient.invalidateQueries({ queryKey: preparationQueryKey });
+        } catch {
+          // Fall through and still open the sheet — the user can adjust by hand
+          // rather than being left with a tag that does nothing.
+        } finally {
+          setOpenPrepId(prepId);
+        }
+      })();
       return;
     }
     // create mode — re-open the already-created prep if we have one for this
@@ -433,7 +492,15 @@ export default function ChatScreen() {
         }, ...prev]);
       },
     });
-  }, [createPreparation, createdPrepByMessageId]);
+  }, [
+    createPreparation,
+    createdPrepByMessageId,
+    appliedAdjustMessageIds,
+    preparationList,
+    updatePreparation,
+    replaceDrills,
+    queryClient,
+  ]);
 
   // PreparationSheet wants the full MatchPreparation object. Pull it from the
   // cached list once the id is set. Drills inlined from a chat token may take
