@@ -411,11 +411,13 @@ export default function ChatScreen() {
       // unchanged prep right after Marco said it had been updated.
       const target = preparationList.find((r) => r.id === prepId);
       const inlineDrills = prefill.drills ?? [];
-      // Without the cached row we can't append without clobbering the existing
-      // queue, so leave those drills alone rather than risk losing them.
-      const canMergeDrills = inlineDrills.length > 0 && target !== undefined;
       const alreadyApplied = appliedAdjustMessageIds.has(messageId);
-      if (alreadyApplied || (!prefill.note && !canMergeDrills)) {
+      // Every write is gated on having the cached row: drills because PUT
+      // replaces the whole queue and we'd clobber it, the note because a prep
+      // missing from the list may simply have been deleted — writing then just
+      // buys a 404. The effect below decides whether it's gone or still loading.
+      const canApply = target !== undefined && (prefill.note || inlineDrills.length > 0);
+      if (alreadyApplied || !canApply) {
         setOpenPrepId(prepId);
         return;
       }
@@ -431,7 +433,7 @@ export default function ChatScreen() {
             ...(prefill.note
               ? [updatePreparation.mutateAsync({ id: prepId, data: { note: prefill.note } })]
               : []),
-            ...(canMergeDrills && target
+            ...(inlineDrills.length > 0 && target
               ? [replaceDrills.mutateAsync({
                   id: prepId,
                   // PUT replaces the whole queue, so carry existing rows (and
@@ -511,11 +513,33 @@ export default function ChatScreen() {
   );
 
   // If we set openPrepId before the list has refreshed (typical right after
-  // create), pull the list once so the sheet body has a row to render.
+  // create), pull the list once so the sheet body has a row to render. If the
+  // prep is still missing after that refresh it has been deleted, and the tag
+  // would otherwise sit there doing nothing every time it is tapped — so give
+  // up and say so rather than failing silently.
+  const prepLookupRef = useRef<string | null>(null);
   useEffect(() => {
-    if (openPrepId && !openPrep) {
-      void queryClient.invalidateQueries({ queryKey: preparationQueryKey });
+    if (!openPrepId || openPrep) {
+      prepLookupRef.current = null;
+      return;
     }
+    if (prepLookupRef.current === openPrepId) return;
+    prepLookupRef.current = openPrepId;
+    const missingId = openPrepId;
+    void (async () => {
+      await queryClient.invalidateQueries({ queryKey: preparationQueryKey });
+      // Read the refreshed cache directly — the list in scope here is stale.
+      const fresh = queryClient.getQueryData<MatchPreparation[]>(preparationQueryKey);
+      if (fresh && !fresh.some((r) => r.id === missingId)) {
+        setOpenPrepId(null);
+        setMessages((prev) => [{
+          id: `${Date.now()}-gone`,
+          role: 'assistant',
+          content: "That match prep isn't around any more — it looks like it was deleted.",
+          created_at: new Date().toISOString(),
+        }, ...prev]);
+      }
+    })();
   }, [openPrepId, openPrep, queryClient]);
 
   const visibleMessages = useMemo(
