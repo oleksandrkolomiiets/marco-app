@@ -1,0 +1,37 @@
+app/(tabs)/index.tsx
+  s_a0286b603db96d::t_d0284a85b704dd 19
+  s_a0286b603db96d::t_539f9fb2a5bd8c 619-625
+  s_a0286b603db96d::t_dee25f38f942a5 555-557
+  s_a0286b603db96d::t_365aebc23ea2f8 894-896,899,901-907,913
+  s_a0286b603db96d::t_89b50abd53a097 955
+  s_a0286b603db96d::t_ee3a53eaa6eacc 764-765,772-779
+src/components/chat/MatchLogForm.tsx
+  s_a0286b603db96d::t_d6567b65d92795 72
+  s_a0286b603db96d::t_5486ce317a2c31 139
+  s_a0286b603db96d::t_6ce8d3aad1c086 54-71,73-78
+  s_a0286b603db96d::t_862b44d6e9ba16 167
+app/exam/results.tsx
+  s_a0286b603db96d::t_1d63401659b3b9 169-179
+  s_a0286b603db96d::t_6002f4cc410918 131-137
+  s_a0286b603db96d::t_0133174586dc40 100
+src/components/chat/matchLogFeeling.test.ts
+  s_a0286b603db96d::t_8d99861c908cfc 1-32
+app/(auth)/onboarding.tsx
+  s_a0286b603db96d::t_0134f602b4a58a 258-269,273,276-296
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "30daf21aa197a4a0ce28c380db015a7cb3f7dd6e",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
