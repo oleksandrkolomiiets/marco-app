@@ -16,7 +16,7 @@ import {
 import { useUser } from '@/hooks/useUser';
 import { useLessons } from '@/hooks/useLessons';
 import { useLatestExamAttempt } from '@/hooks/useExam';
-import { useMatchPreparation } from '@/hooks/usePreparation';
+import { useMatchPreparation, useTogglePreparationDrill } from '@/hooks/usePreparation';
 import type { Lesson, MatchPreparation } from '@/types/api';
 
 // Hard 2x3 ink offset shared by the quick tiles — `box-shadow: 2px 3px 0` in
@@ -552,6 +552,9 @@ type MatchPreparationCardProps = {
 };
 
 function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationCardProps) {
+  // Declared before the empty-state return so the hook order stays stable.
+  const toggleDrill = useTogglePreparationDrill();
+
   if (!prep) {
     return (
       <DashedBox
@@ -613,9 +616,13 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
   const remaining = total - done;
   const planNote =
     prep.note?.trim() ||
-    (remaining > 0
-      ? `${remaining === 1 ? 'One more drill' : `${remaining} more drills`} before the match.`
-      : 'Queue complete — ready to play.');
+    // An empty queue also has `remaining === 0`, so it has to be handled before
+    // the all-done branch — otherwise a prep with no drills claims to be ready.
+    (total === 0
+      ? 'No drills queued yet — add one or ask Marco.'
+      : remaining > 0
+        ? `${remaining === 1 ? 'One more drill' : `${remaining} more drills`} before the match.`
+        : 'Queue complete — ready to play.');
 
   return (
     <View style={{ marginHorizontal: 20, marginBottom: 24 }}>
@@ -754,13 +761,22 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
         />
       </View>
 
-      {/* Drill list */}
+      {/* Drill list — checkable straight from the card. These rows render a
+          checkbox, so they have to actually toggle rather than just display. */}
       {prep.drills.map((d) => (
         <PrepQueueItem
           key={d.id}
           label={d.title}
           duration={formatDrillDuration(d.duration_seconds)}
           done={d.completed}
+          onToggle={() =>
+            toggleDrill.mutate({
+              preparationId: prep.id,
+              drillId: d.id,
+              completed: !d.completed,
+            })
+          }
+          busy={toggleDrill.isPending}
         />
       ))}
 
@@ -875,16 +891,26 @@ type PrepQueueItemProps = {
   label: string;
   duration: string;
   done: boolean;
+  /** Omit to render a read-only row (no checkbox affordance is implied). */
+  onToggle?: () => void;
+  busy?: boolean;
 };
 
-function PrepQueueItem({ label, duration, done }: PrepQueueItemProps) {
+function PrepQueueItem({ label, duration, done, onToggle, busy }: PrepQueueItemProps) {
   return (
-    <View
+    <Pressable
+      onPress={onToggle}
+      disabled={!onToggle || busy}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: done, disabled: !onToggle || !!busy }}
+      accessibilityLabel={label}
+      hitSlop={6}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
         marginBottom: 10,
+        opacity: busy ? 0.5 : 1,
       }}
     >
       <View
@@ -926,6 +952,6 @@ function PrepQueueItem({ label, duration, done }: PrepQueueItemProps) {
       >
         {duration}
       </Text>
-    </View>
+    </Pressable>
   );
 }

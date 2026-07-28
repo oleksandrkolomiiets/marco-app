@@ -97,7 +97,7 @@ function ResultsView({
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: COLORS.bg }}>
-      <ResultsHeader onBack={onRetake} />
+      <ResultsHeader onBack={onDone} onRetake={onRetake} />
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
@@ -128,7 +128,13 @@ function ResultsView({
   );
 }
 
-function ResultsHeader({ onBack }: { onBack: () => void }) {
+function ResultsHeader({
+  onBack,
+  onRetake,
+}: {
+  onBack: () => void;
+  onRetake: () => void;
+}) {
   return (
     <View
       style={{
@@ -160,9 +166,17 @@ function ResultsHeader({ onBack }: { onBack: () => void }) {
           RULES EXAM · RESULTS
         </Text>
       </View>
-      <View style={{ width: 28, alignItems: 'flex-end' }}>
-        <Text style={{ fontSize: 16, color: COLORS.ink }}>⤴</Text>
-      </View>
+      {/* Retake lives here. The back arrow used to trigger it, which meant
+          "Go back" silently started a fresh 20-question attempt. */}
+      <Pressable
+        onPress={onRetake}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="Retake exam"
+        style={{ width: 28, alignItems: 'flex-end' }}
+      >
+        <Text style={{ fontSize: 16, color: COLORS.ink }}>↺</Text>
+      </Pressable>
     </View>
   );
 }

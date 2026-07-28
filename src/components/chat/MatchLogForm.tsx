@@ -51,6 +51,31 @@ const FEELINGS = [
   { key: 'tired', label: 'Tired', emoji: '😓' },
 ];
 
+// Marco is now told to emit one of the FEELINGS keys, and the API only enforces
+// a length cap, so free-form values still exist on older logs (e.g. "great").
+// Map what we safely can onto a chip — an unmatched value would otherwise leave
+// the step silently blank, losing the answer the user already gave Marco.
+const FEELING_ALIASES: Record<string, string> = {
+  great: 'good',
+  amazing: 'good',
+  awesome: 'good',
+  ok: 'meh',
+  okay: 'meh',
+  fine: 'meh',
+  angry: 'frustrated',
+  annoyed: 'frustrated',
+  exhausted: 'tired',
+  onfire: 'on fire',
+  'on-fire': 'on fire',
+};
+
+export function normalizeFeeling(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const key = raw.trim().toLowerCase();
+  if (FEELINGS.some((f) => f.key === key)) return key;
+  return FEELING_ALIASES[key] ?? null;
+}
+
 function todayString() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -111,7 +136,7 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
         partnerName: editMatch.partner_name,
         opponents: editMatch.opponents.slice(0, 2),
         result: editMatch.result,
-        feeling: editMatch.feeling,
+        feeling: normalizeFeeling(editMatch.feeling),
         note: editMatch.note ?? '',
       });
       const isToday = playedOn === todayString();
@@ -139,7 +164,7 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
         partnerName: validPartner,
         opponents: (prefill?.opponents ?? []).slice(0, 2),
         result: prefill?.result ?? null,
-        feeling: prefill?.feeling ?? null,
+        feeling: normalizeFeeling(prefill?.feeling),
         note: prefill?.note ?? '',
       });
       setCustomDate('');

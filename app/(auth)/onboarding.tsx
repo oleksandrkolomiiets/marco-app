@@ -255,18 +255,45 @@ function Step5({ value, onChange }: { value: Goal | null; onChange: (v: Goal) =>
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
+// Player settings reuses this screen to edit an existing profile, so seed each
+// step from what the user already chose. Values are matched against the option
+// lists rather than trusted blindly, so a stale or unknown value from the API
+// falls back to "unanswered" instead of selecting nothing while looking set.
+const asOption = <T extends string>(
+  allowed: readonly T[],
+  value: string | null | undefined,
+): T | null =>
+  value != null && (allowed as readonly string[]).includes(value) ? (value as T) : null;
+
+const COURT_SIDES: readonly CourtSide[] = ['left', 'right', 'either'];
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
+  const user = useAuthStore((s) => s.user);
 
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<OnboardingData>({
-    skill_level: null,
-    play_frequency: null,
-    dominant_hand: null,
-    court_side: null,
-    goal: null,
-  });
+  // Initialiser form: seeded once on mount so later store updates (the PATCH
+  // response writes back to the store) can't clobber in-progress edits.
+  const [data, setData] = useState<OnboardingData>(() => ({
+    skill_level: asOption(
+      SKILL_LEVELS.map((l) => l.value),
+      user?.skill_level,
+    ),
+    play_frequency: asOption(
+      FREQUENCIES.map((f) => f.value),
+      user?.play_frequency,
+    ),
+    dominant_hand: asOption(
+      HANDS.map((h) => h.value),
+      user?.dominant_hand,
+    ),
+    court_side: asOption(COURT_SIDES, user?.court_side),
+    goal: asOption(
+      GOALS.map((g) => g.value),
+      user?.goal,
+    ),
+  }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
