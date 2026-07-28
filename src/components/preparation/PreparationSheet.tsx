@@ -453,7 +453,14 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
                 updatePreparation.mutate(
                   {
                     id: preparation.id,
-                    data: { played_at: next === 'played' ? 'now' : '' },
+                    data:
+                      next === 'played'
+                        ? { played_at: 'now' }
+                        : // Dropping back to upcoming has to clear the grade too.
+                          // GradeSelect is hidden for an unplayed future prep, so
+                          // a leftover grade is unreachable in the UI while still
+                          // counting toward the plan-worked stats.
+                          { played_at: '', plan_grade: '' },
                   },
                   { onError: () => setActionError("Couldn't update the match status — try again.") },
                 )
