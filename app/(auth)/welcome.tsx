@@ -1,9 +1,12 @@
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Line, Path, Rect } from 'react-native-svg';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { colors } from '@/constants/colors';
 
 const GoogleLogo = () => (
   <Svg width={18} height={18} viewBox="0 0 24 24">
@@ -26,157 +29,204 @@ const GoogleLogo = () => (
   </Svg>
 );
 
+// Faint court diagram bleeding off the upper-right corner, per the design's
+// AuthEntry background treatment.
+const CourtWatermark = () => (
+  <View style={styles.watermark} pointerEvents="none">
+    <Svg width={240} height={200} viewBox="0 0 240 200">
+      <Rect x={6} y={6} width={228} height={188} rx={3} fill="none" stroke={colors.teal} strokeWidth={1.6} />
+      <Line x1={120} y1={6} x2={120} y2={194} stroke={colors.teal} strokeWidth={1.4} strokeDasharray="3 3" />
+      <Line x1={6} y1={100} x2={234} y2={100} stroke={colors.teal} strokeWidth={1} />
+    </Svg>
+  </View>
+);
+
+type SketchyButtonProps = {
+  label: string;
+  onPress: () => void;
+  variant: 'filled' | 'ghost';
+  disabled?: boolean;
+  loading?: boolean;
+  height?: number;
+  fontSize?: number;
+  leftIcon?: ReactNode;
+};
+
+// The design gives every button a 1.6px ink outline and a hard 2x3 ink offset
+// (`boxShadow: 2px 3px 0`). React Native can't express a hard shadow, so the
+// offset is painted as a sibling rectangle behind the face. Pressing sinks the
+// face onto the shadow.
+function SketchyButton({
+  label,
+  onPress,
+  variant,
+  disabled = false,
+  loading = false,
+  height = 54,
+  fontSize = 15.5,
+  leftIcon,
+}: SketchyButtonProps) {
+  const [pressed, setPressed] = useState(false);
+  const isFilled = variant === 'filled';
+
+  return (
+    <View style={{ height: height + SHADOW_Y }}>
+      {!pressed && !disabled ? <View pointerEvents="none" style={[styles.buttonShadow, { height }]} /> : null}
+      <Pressable
+        accessibilityRole="button"
+        disabled={disabled || loading}
+        onPress={onPress}
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
+        style={{
+          height,
+          borderRadius: 14,
+          borderWidth: 1.6,
+          borderColor: colors.ink,
+          // Opaque even for ghost: the hard shadow is painted as a sibling rect
+          // behind the face, so a transparent face would let it bleed through.
+          backgroundColor: isFilled ? '#FFFFFF' : colors.bg,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: disabled ? 0.45 : 1,
+          transform: [
+            { translateX: pressed && !disabled ? SHADOW_X : 0 },
+            { translateY: pressed && !disabled ? SHADOW_Y : 0 },
+          ],
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator color={colors.ink} />
+        ) : (
+          <>
+            {leftIcon ? <View style={{ marginRight: 12 }}>{leftIcon}</View> : null}
+            <Text style={{ fontSize, fontWeight: '600', color: colors.ink }}>{label}</Text>
+          </>
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
 export default function WelcomeScreen() {
   const router = useRouter();
   const { signInWithGoogle, isLoading, error, setError, ready } = useGoogleAuth();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
-      <View style={{ flex: 1, justifyContent: 'space-between' }}>
+    <SafeAreaView style={styles.safeArea}>
+      <CourtWatermark />
+
+      <View style={styles.body}>
         {/* Logo */}
-        <View style={{ paddingTop: 16, paddingHorizontal: 24 }}>
-          <Text
-            style={{
-              fontFamily: 'Caveat_400Regular',
-              fontSize: 22,
-              color: '#E36414',
-            }}
-          >
-            marco
-          </Text>
+        <View style={styles.logoRow}>
+          <Text style={styles.logo}>marco</Text>
         </View>
 
         {/* Hero */}
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          <MarcoAvatar size={160} />
+        <View style={styles.hero}>
+          <MarcoAvatar size={104} />
 
-          <View style={{ marginTop: 32, alignItems: 'center' }}>
-            <Text
-              style={{
-                fontFamily: 'InstrumentSerif_400Regular',
-                fontSize: 44,
-                color: '#1a2a30',
-                lineHeight: 48,
-                textAlign: 'center',
-              }}
-            >
-              Step onto the court.
-            </Text>
-          </View>
+          <Text style={styles.greeting}>Ready when you are.</Text>
 
-          {/* Marco speech */}
-          <View
-            style={{
-              marginTop: 20,
-              backgroundColor: '#fff',
-              borderRadius: 14,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderWidth: 1,
-              borderColor: 'rgba(26, 42, 48, 0.1)',
-              maxWidth: 300,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                color: '#4A5560',
-                textAlign: 'center',
-                lineHeight: 20,
-              }}
-            >
-              Ready when you are. Sign in to pick up where you left off, or start a new training file with me.
-            </Text>
-          </View>
+          <Text style={styles.heading}>Step onto the court.</Text>
+
+          <Text style={styles.subcopy}>
+            Sign in to pick up where you left off, or start a new training file with me.
+          </Text>
         </View>
 
-        {/* Auth buttons */}
-        <View style={{ paddingHorizontal: 24, paddingBottom: 40, gap: 12 }}>
+        {/* Auth actions */}
+        <View style={styles.actions}>
           {error !== null ? (
             <Pressable
               onPress={() => setError(null)}
               accessibilityRole="button"
               accessibilityLabel="Dismiss error"
-              style={{
-                backgroundColor: '#FEF2F2',
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 4,
-              }}
+              style={styles.errorBanner}
             >
-              <Text style={{ color: '#DC2626', fontSize: 13, textAlign: 'center' }}>
-                {error}
-              </Text>
+              <Text style={styles.errorText}>{error}</Text>
             </Pressable>
           ) : null}
 
-          {/* Google */}
-          <Pressable
-            disabled={!ready || isLoading}
+          <SketchyButton
+            label="Continue with Google"
+            variant="filled"
+            leftIcon={<GoogleLogo />}
+            disabled={!ready}
+            loading={isLoading}
             onPress={() => void signInWithGoogle()}
-            style={({ pressed }) => ({
-              height: 56,
-              backgroundColor: pressed ? '#f5f5f5' : '#fff',
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: '#E5E5E5',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              opacity: ready ? 1 : 0.6,
-            })}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#0F4C5C" />
-            ) : (
-              <>
-                <GoogleLogo />
-                <Text style={{ fontSize: 16, color: '#1A1A1A', fontWeight: '500' }}>
-                  Continue with Google
-                </Text>
-              </>
-            )}
-          </Pressable>
+          />
 
-          {/* Email */}
-          <View style={{ position: 'relative' }}>
-            <View
-              style={{
-                position: 'absolute',
-                top: 3,
-                left: 3,
-                right: -3,
-                height: 56,
-                backgroundColor: '#E36414',
-                borderRadius: 14,
-              }}
-            />
-            <Pressable
-              onPress={() => router.push('/(auth)/signin')}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#0D3F4E' : '#0F4C5C',
-                borderRadius: 14,
-                height: 56,
-                alignItems: 'center',
-                justifyContent: 'center',
-              })}
-            >
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-                Continue with email
-              </Text>
-            </Pressable>
-          </View>
+          <SketchyButton
+            label="Continue with email"
+            variant="ghost"
+            height={56}
+            fontSize={16.5}
+            onPress={() => router.push('/(auth)/signin')}
+          />
+        </View>
 
-          {/* Terms */}
-          <Text style={{ fontSize: 12, color: '#ABABAB', textAlign: 'center', marginTop: 4 }}>
-            By continuing you agree to our{' '}
-            <Text style={{ color: '#0F4C5C' }}>Terms</Text>
-            {' '}and{' '}
-            <Text style={{ color: '#0F4C5C' }}>Privacy Policy</Text>
+        {/* Terms */}
+        <View style={styles.termsWrap}>
+          <Text style={styles.terms}>
+            By continuing you agree to our{'\n'}
+            <Text style={styles.termsLink}>Terms</Text>
+            {' & '}
+            <Text style={styles.termsLink}>Privacy</Text>.
           </Text>
         </View>
       </View>
     </SafeAreaView>
   );
 }
+
+const SHADOW_X = 2;
+const SHADOW_Y = 3;
+
+const styles = {
+  safeArea: { flex: 1, backgroundColor: colors.bg },
+  watermark: { position: 'absolute', top: 60, right: -60, opacity: 0.12 },
+  body: { flex: 1, justifyContent: 'space-between' },
+  logoRow: { paddingTop: 16, paddingHorizontal: 24 },
+  logo: { fontFamily: 'Caveat_400Regular', fontSize: 22, color: colors.clay },
+  hero: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  greeting: {
+    marginTop: 14,
+    fontFamily: 'Caveat_400Regular',
+    fontSize: 22,
+    color: colors.clay,
+    textAlign: 'center',
+  },
+  heading: {
+    marginTop: 18,
+    fontFamily: 'InstrumentSerif_400Regular',
+    fontSize: 32,
+    lineHeight: 34,
+    letterSpacing: -0.64,
+    color: colors.ink,
+    textAlign: 'center',
+  },
+  subcopy: {
+    marginTop: 8,
+    maxWidth: 280,
+    fontSize: 14.5,
+    lineHeight: 20,
+    color: colors.inkSoft,
+    textAlign: 'center',
+  },
+  actions: { paddingHorizontal: 24, gap: 12 },
+  errorBanner: { backgroundColor: '#FEF2F2', borderRadius: 10, padding: 12, marginBottom: 4 },
+  errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center' },
+  buttonShadow: {
+    position: 'absolute',
+    left: SHADOW_X,
+    right: -SHADOW_X,
+    top: SHADOW_Y,
+    borderRadius: 14,
+    backgroundColor: colors.ink,
+  },
+  termsWrap: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 28 },
+  terms: { fontSize: 12, lineHeight: 17, color: colors.inkSoft, textAlign: 'center' },
+  termsLink: { color: colors.inkSoft, textDecorationLine: 'underline' },
+} as const;

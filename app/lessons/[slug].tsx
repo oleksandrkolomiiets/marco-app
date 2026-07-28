@@ -15,9 +15,19 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
+import { DashedBox } from '@/components/ui/DashedBox';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { useLesson, useUpdateProgress } from '@/hooks/useLessons';
 import type { CuePoint, Lesson, LessonDrill, ProgressStatus } from '@/types/api';
+
+// Hard 2x3 ink offset — `box-shadow: 2px 3px 0` in the design.
+const hardShadow = {
+  shadowColor: '#1A2A30',
+  shadowOffset: { width: 2, height: 3 },
+  shadowOpacity: 1,
+  shadowRadius: 0,
+  elevation: 2,
+} as const;
 
 const COLORS = {
   bg: '#FAF8F5',
@@ -170,16 +180,20 @@ function TitleBlock({ title, quote }: { title: string; quote: string }) {
       >
         {title}
       </Text>
-      <Text
-        style={{
-          fontFamily: 'Caveat_400Regular',
-          fontSize: 17,
-          color: COLORS.orange,
-          marginTop: 6,
-        }}
-      >
-        “{quote}”
-      </Text>
+      {/* Only render the quote when there is one — the quote marks are
+          hardcoded around it, so an empty tagline rendered a bare “”. */}
+      {quote.length > 0 ? (
+        <Text
+          style={{
+            fontFamily: 'Caveat_400Regular',
+            fontSize: 17,
+            color: COLORS.orange,
+            marginTop: 4,
+          }}
+        >
+          “{quote}”
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -434,10 +448,14 @@ function CommonMistakeCard({
     <View
       style={{
         marginHorizontal: 20,
-        marginBottom: 12,
+        marginBottom: 14,
         backgroundColor: COLORS.orange,
+        borderWidth: 1.4,
+        borderColor: COLORS.ink,
         borderRadius: 14,
-        padding: 14,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        ...hardShadow,
       }}
     >
       <View
@@ -518,21 +536,14 @@ function DrillCard({ drill }: { drill: LessonDrill | null }) {
   });
 
   return (
-    <Pressable
-      onPress={toggle}
-      style={{
-        marginHorizontal: 20,
-        marginBottom: 24,
-        backgroundColor: COLORS.white,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        borderStyle: 'dashed',
-        padding: 14,
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-      }}
-    >
+    <Pressable onPress={toggle} style={{ marginHorizontal: 20, marginBottom: 24 }}>
+      {/* Dashed outline drawn with SVG — RN can't dash a rounded border. */}
+      <DashedBox
+        radius={14}
+        color={COLORS.mute}
+        background={COLORS.white}
+        style={{ padding: 14, flexDirection: 'row', alignItems: 'flex-start' }}
+      >
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.ink }}>
           {titleText}
@@ -553,16 +564,17 @@ function DrillCard({ drill }: { drill: LessonDrill | null }) {
           </Text>
         ) : null}
       </View>
-      <Animated.Text
-        style={{
-          fontSize: 18,
-          color: COLORS.ink,
-          transform: [{ rotate }],
-          marginLeft: 8,
-        }}
-      >
-        +
-      </Animated.Text>
+        <Animated.Text
+          style={{
+            fontSize: 18,
+            color: COLORS.ink,
+            transform: [{ rotate }],
+            marginLeft: 8,
+          }}
+        >
+          +
+        </Animated.Text>
+      </DashedBox>
     </Pressable>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { signOut } from '@/api/auth';
 import { AchievementDetailSheet } from '@/components/profile/AchievementDetailSheet';
 import { HardShadowBox } from '@/components/ui/HardShadowBox';
+import { DashedRule } from '@/components/ui/DashedRule';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useLessons } from '@/hooks/useLessons';
@@ -446,6 +447,7 @@ const StatTile = ({
     <HardShadowBox
       offsetX={2}
       offsetY={2}
+      radius={12}
       background={highlighted ? COLORS.orange : COLORS.white}
       style={{ flex: 1 }}
     >
@@ -499,24 +501,26 @@ type SettingsRowProps = {
 };
 
 const SettingsRow = ({ label, onPress, destructive = false }: SettingsRowProps) => (
-  <Pressable
-    onPress={onPress}
-    style={{
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 9,
-      paddingHorizontal: 4,
-      borderBottomWidth: 1,
-      borderBottomColor: COLORS.dashed,
-      borderStyle: 'dashed',
-    }}
-  >
-    <Text style={{ fontSize: 13, color: destructive ? COLORS.orange : COLORS.ink }}>
-      {label}
-    </Text>
-    <Text style={{ fontSize: 13, color: COLORS.mute }}>›</Text>
-  </Pressable>
+  // The separator is a dashed rule drawn with SVG: RN ignores
+  // `borderStyle: 'dashed'` on a bottom-only border and drew it solid.
+  <View>
+    <Pressable
+      onPress={onPress}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 9,
+        paddingHorizontal: 4,
+      }}
+    >
+      <Text style={{ fontSize: 13, color: destructive ? COLORS.orange : COLORS.ink }}>
+        {label}
+      </Text>
+      <Text style={{ fontSize: 13, color: COLORS.mute }}>›</Text>
+    </Pressable>
+    <DashedRule color={COLORS.dashed} />
+  </View>
 );
 
 type AchievementBadgeProps = {
@@ -537,7 +541,7 @@ const AchievementBadge = ({ achievement, onPress }: AchievementBadgeProps) => {
   return (
     <Pressable onPress={onPress} style={{ width: 60, alignItems: 'center' }}>
       {unlocked ? (
-        <HardShadowBox inline offsetX={2} offsetY={2} background={tileBg}>
+        <HardShadowBox inline offsetX={2} offsetY={2} radius={12} background={tileBg}>
           <View
             style={{
               width: 60,

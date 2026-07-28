@@ -18,6 +18,13 @@ type HardShadowBoxProps = {
   // reserved margin). Useful in tight grids where siblings are spaced just
   // wide enough for the shadow overhang to slot into the gap.
   inline?: boolean;
+  // Corner radius, applied to both the face and the offset rectangle behind
+  // it. The design's cards are 12–14; square corners were never intended.
+  radius?: number;
+  // Ink outline. Every card in the design pairs the offset with a 1.4px ink
+  // border — without it the card reads as a floating shadow with no edge.
+  borderWidth?: number;
+  borderColor?: string;
 };
 
 // HardShadowBox renders an ink-colored sibling behind the content, offset by
@@ -32,6 +39,9 @@ export function HardShadowBox({
   offsetY = 2,
   style,
   inline = false,
+  radius = 14,
+  borderWidth = 1.4,
+  borderColor = '#1A2A30',
 }: HardShadowBoxProps) {
   const containerStyle = inline ? style : [{ marginRight: offsetX, marginBottom: offsetY }, style];
   return (
@@ -45,10 +55,21 @@ export function HardShadowBox({
             right: -offsetX,
             top: offsetY,
             bottom: -offsetY,
+            borderRadius: radius,
             backgroundColor: shadowColor,
           }}
         />
-        <View style={{ backgroundColor: background }}>{children}</View>
+        <View
+          style={{
+            backgroundColor: background,
+            borderRadius: radius,
+            borderWidth,
+            borderColor,
+            overflow: 'hidden',
+          }}
+        >
+          {children}
+        </View>
       </View>
     </View>
   );

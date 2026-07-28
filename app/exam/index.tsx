@@ -19,7 +19,20 @@ const COLORS = {
   orange: '#E36414',
 };
 
-const FONT_MONO = 'ui-monospace';
+// 'ui-monospace' is a CSS generic family — React Native doesn't resolve it, so
+// every mono label here was silently falling back to the system font. The app
+// loads JetBrains Mono in app/_layout.tsx; use that.
+const FONT_MONO = 'JetBrainsMono_400Regular';
+
+// Hard ink offset — `box-shadow: 2px 3px 0` in the design. Applied to the
+// selected answer and the footer CTAs.
+const hardShadow = {
+  shadowColor: COLORS.ink,
+  shadowOffset: { width: 2, height: 3 },
+  shadowOpacity: 1,
+  shadowRadius: 0,
+  elevation: 2,
+} as const;
 
 export default function ExamScreen() {
   const router = useRouter();
@@ -271,9 +284,10 @@ function Options({
               paddingVertical: 8,
               backgroundColor: selected ? COLORS.cardCream : COLORS.card,
               borderRadius: 10,
-              borderWidth: selected ? 1.5 : 1,
+              borderWidth: selected ? 1.8 : 1.2,
               borderColor: selected ? COLORS.ink : COLORS.stone,
               gap: 12,
+              ...(selected ? hardShadow : null),
             }}
           >
             <View
@@ -361,10 +375,12 @@ function FooterBar({
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: 14,
-          borderWidth: 1.5,
+          borderWidth: 1.6,
           borderColor: COLORS.ink,
           backgroundColor: COLORS.bg,
           opacity: canBack ? 1 : 0.35,
+          // Design drops the offset on the disabled state.
+          ...(canBack ? hardShadow : null),
         }}
       >
         <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.ink }}>
@@ -380,10 +396,11 @@ function FooterBar({
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: 14,
-          borderWidth: 1.5,
+          borderWidth: 1.6,
           borderColor: COLORS.ink,
           backgroundColor: nextBg,
           opacity: canAdvance && !isSubmitting ? 1 : 0.4,
+          ...(canAdvance && !isSubmitting ? hardShadow : null),
         }}
       >
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>

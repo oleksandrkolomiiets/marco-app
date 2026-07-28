@@ -3,17 +3,31 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
+import { DashedRule } from '@/components/ui/DashedRule';
+import { DashedBox } from '@/components/ui/DashedBox';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { PreparationSheet } from '@/components/preparation/PreparationSheet';
 import {
+  preparationColors,
   preparationColors as C,
   preparationFonts as F,
+  stickerShadowSm,
 } from '@/components/preparation/theme';
 import { useUser } from '@/hooks/useUser';
 import { useLessons } from '@/hooks/useLessons';
 import { useLatestExamAttempt } from '@/hooks/useExam';
 import { useMatchPreparation } from '@/hooks/usePreparation';
 import type { Lesson, MatchPreparation } from '@/types/api';
+
+// Hard 2x3 ink offset shared by the quick tiles — `box-shadow: 2px 3px 0` in
+// the design. Matches stickerShadow's technique but with the tile's offset.
+const tileShadow = {
+  shadowColor: preparationColors.ink,
+  shadowOffset: { width: 2, height: 3 },
+  shadowOpacity: 1,
+  shadowRadius: 0,
+  elevation: 2,
+} as const;
 
 const DAY_NAMES = [
   'Sunday',
@@ -148,18 +162,27 @@ export default function HomeScreen() {
     : '"It\'s a slap, not a smash. Tranquilo."';
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: '#FAF8F5' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Top nav */}
+        {/* Layout is inline, not className: NativeWind 4.1 / css-interop 0.1.22
+            do not apply className under React 19 + RN 0.81, so these rows were
+            silently collapsing to the default column direction. */}
         <View
-          className="flex-row items-center justify-between"
-          style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 24,
+            paddingTop: 4,
+            paddingBottom: 16,
+          }}
         >
           <Text
             style={{
-              fontFamily: 'Caveat_400Regular',
+              fontFamily: F.hand,
               fontSize: 22,
-              color: '#E36414',
+              color: C.clay,
             }}
           >
             marco
@@ -168,17 +191,18 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/profile')}
             accessibilityRole="button"
             accessibilityLabel="Open profile"
-            className="items-center justify-center"
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              backgroundColor: '#FFFFFF',
-              borderWidth: 1,
-              borderColor: 'rgba(26,42,48,0.15)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: C.cream,
+              borderWidth: 1.4,
+              borderColor: C.ink,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: '700', color: '#1A2A30' }}>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>
               {initial}
             </Text>
           </Pressable>
@@ -188,14 +212,14 @@ export default function HomeScreen() {
           <View style={{ paddingHorizontal: 16 }}>
             <SkeletonCard height={90} />
             <SkeletonCard height={200} />
-            <View className="flex-row" style={{ gap: 10 }}>
-              <View className="flex-1">
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flex: 1 }}>
                 <SkeletonCard height={90} />
               </View>
-              <View className="flex-1">
+              <View style={{ flex: 1 }}>
                 <SkeletonCard height={90} />
               </View>
-              <View className="flex-1">
+              <View style={{ flex: 1 }}>
                 <SkeletonCard height={90} />
               </View>
             </View>
@@ -205,20 +229,34 @@ export default function HomeScreen() {
           <>
             {/* Greeting card */}
             <View
-              className="flex-row items-start"
               style={{
-                marginHorizontal: 16,
-                marginBottom: 20,
-                backgroundColor: '#1A2A30',
-                borderRadius: 16,
-                padding: 16,
-                gap: 14,
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                marginHorizontal: 20,
+                marginBottom: 18,
+                // Design anchors this card in brand teal with the sticker
+                // treatment — ink outline + hard 3x4 offset. It was rendering
+                // in near-black ink with no border or shadow at all.
+                backgroundColor: C.teal,
+                borderWidth: 1.6,
+                borderColor: C.ink,
+                borderRadius: 22,
+                paddingVertical: 16,
+                paddingHorizontal: 18,
+                shadowColor: C.ink,
+                shadowOffset: { width: 3, height: 4 },
+                shadowOpacity: 1,
+                shadowRadius: 0,
+                elevation: 3,
               }}
             >
-              <View style={{ marginTop: 2 }}>
-                <MarcoAvatar size={52} />
+              <View style={{ marginTop: 2, flexShrink: 0 }}>
+                <MarcoAvatar size={66} />
               </View>
-              <View className="flex-1">
+              {/* flexShrink + explicit margin rather than the row's `gap`:
+                  with gap set, the text column measured wider than the card
+                  and the greeting ran off the right edge. */}
+              <View style={{ flex: 1, flexShrink: 1, marginLeft: 14 }}>
                 <Text
                   style={{
                     fontSize: 13,
@@ -258,11 +296,12 @@ export default function HomeScreen() {
             <Text
               style={{
                 paddingHorizontal: 20,
-                marginBottom: 10,
+                marginBottom: 6,
                 fontSize: 11,
                 fontWeight: '700',
                 letterSpacing: 1.1,
-                color: '#1A2A30',
+                // Section kickers are muted in the design, not full ink.
+                color: C.mute,
               }}
             >
               TODAY&apos;S DRILL
@@ -275,19 +314,25 @@ export default function HomeScreen() {
                   : router.push('/(tabs)/lessons')
               }
               style={{
-                marginHorizontal: 16,
-                marginBottom: 20,
-                backgroundColor: '#FEFBF5',
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: 'rgba(26,42,48,0.1)',
+                marginHorizontal: 20,
+                marginBottom: 16,
+                backgroundColor: C.cream,
+                borderRadius: 18,
+                borderWidth: 1.4,
+                borderColor: C.ink,
                 overflow: 'hidden',
+                shadowColor: C.ink,
+                shadowOffset: { width: 2, height: 3 },
+                shadowOpacity: 1,
+                shadowRadius: 0,
+                elevation: 2,
               }}
             >
               {/* Video area */}
               <View
-                className="items-center justify-center"
                 style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   backgroundColor: '#0C1C22',
                   aspectRatio: 16 / 9,
                   width: '100%',
@@ -334,8 +379,9 @@ export default function HomeScreen() {
                 </View>
 
                 <View
-                  className="items-center justify-center"
                   style={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     width: 48,
                     height: 48,
                     borderRadius: 24,
@@ -362,8 +408,9 @@ export default function HomeScreen() {
                   style={{
                     fontFamily: 'Caveat_400Regular',
                     fontSize: 16,
-                    color: '#8A8074',
-                    marginTop: 4,
+                    // Marco's line is clay in the design, not warm grey.
+                    color: C.clay,
+                    marginTop: 2,
                   }}
                 >
                   {lessonQuote}
@@ -373,19 +420,19 @@ export default function HomeScreen() {
 
             {/* Quick tiles */}
             <View
-              className="flex-row"
-              style={{ marginHorizontal: 16, marginBottom: 20, gap: 10 }}
+              style={{ flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, gap: 10 }}
             >
               <Pressable
                 onPress={() => router.push('/(tabs)/lessons')}
-                className="flex-1"
                 style={{
+                  flex: 1,
                   backgroundColor: '#FFFFFF',
-                  borderWidth: 1,
-                  borderColor: 'rgba(26,42,48,0.1)',
+                  borderWidth: 1.4,
+                  borderColor: C.ink,
                   borderRadius: 14,
                   height: 90,
                   padding: 12,
+                  ...tileShadow,
                 }}
               >
                 <Text
@@ -411,12 +458,15 @@ export default function HomeScreen() {
 
               <Pressable
                 onPress={() => router.push('/(tabs)/chat')}
-                className="flex-1"
                 style={{
-                  backgroundColor: '#E36414',
+                  flex: 1,
+                  backgroundColor: C.clay,
+                  borderWidth: 1.4,
+                  borderColor: C.ink,
                   borderRadius: 14,
                   height: 90,
                   padding: 12,
+                  ...tileShadow,
                 }}
               >
                 <Text
@@ -446,14 +496,15 @@ export default function HomeScreen() {
                     (examAttempt ? '/exam/results' : '/exam') as never,
                   )
                 }
-                className="flex-1"
                 style={{
+                  flex: 1,
                   backgroundColor: '#FFFFFF',
-                  borderWidth: 1,
-                  borderColor: 'rgba(26,42,48,0.1)',
+                  borderWidth: 1.4,
+                  borderColor: C.ink,
                   borderRadius: 14,
                   height: 90,
                   padding: 12,
+                  ...tileShadow,
                 }}
               >
                 <Text
@@ -503,15 +554,13 @@ type MatchPreparationCardProps = {
 function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationCardProps) {
   if (!prep) {
     return (
-      <View
+      <DashedBox
+        radius={16}
+        color={C.stone}
+        background={C.card}
         style={{
-          marginHorizontal: 16,
+          marginHorizontal: 20,
           marginBottom: 24,
-          backgroundColor: C.card,
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: C.inkSoft,
-          borderStyle: 'dashed',
           padding: 16,
         }}
       >
@@ -549,7 +598,7 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
             Plan a match ›
           </Text>
         </Pressable>
-      </View>
+      </DashedBox>
     );
   }
 
@@ -569,41 +618,49 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
       : 'Queue complete — ready to play.');
 
   return (
-    <View
-      style={{
-        marginHorizontal: 16,
-        marginBottom: 24,
-        backgroundColor: C.card,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: C.inkSoft,
-        borderStyle: 'dashed',
-        padding: 16,
-      }}
-    >
-      {/* Header */}
+    <View style={{ marginHorizontal: 20, marginBottom: 24 }}>
+      {/* Header — sits above the card in the design, as a muted kicker */}
       <View
         style={{
           flexDirection: 'row',
-          alignItems: 'center',
+          alignItems: 'baseline',
           justifyContent: 'space-between',
-          marginBottom: 12,
+          marginBottom: 6,
         }}
       >
-        <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>
-          Match preparation
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: '700',
+            letterSpacing: 1.1,
+            color: C.mute,
+          }}
+        >
+          MATCH READINESS
         </Text>
         <Text
           style={{
             fontFamily: F.mono,
             fontSize: 11,
-            letterSpacing: 0.4,
+            letterSpacing: 0.66,
             color: C.mute,
           }}
         >
           {formatNextLabel(prep.scheduled_at)}
         </Text>
       </View>
+
+      <View
+        style={{
+          backgroundColor: C.card,
+          borderRadius: 14,
+          // Design uses the solid sticker treatment here, not a dashed hairline.
+          borderWidth: 1.4,
+          borderColor: C.ink,
+          padding: 16,
+          ...tileShadow,
+        }}
+      >
 
       {/* Match info row */}
       <View
@@ -714,13 +771,19 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
           alignItems: 'center',
           marginTop: 4,
           marginBottom: 12,
-          backgroundColor: C.ink,
+          // Teal with the sticker treatment, same as the greeting card — this
+          // was also rendering in flat ink with no outline or offset.
+          backgroundColor: C.teal,
+          borderWidth: 1.4,
+          borderColor: C.ink,
           borderRadius: 12,
-          padding: 12,
-          gap: 10,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          gap: 9,
+          ...stickerShadowSm,
         }}
       >
-        <MarcoAvatar size={32} />
+        <MarcoAvatar size={30} />
         <View style={{ flex: 1 }}>
           <Text
             style={{
@@ -747,50 +810,62 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
         </View>
       </View>
 
-      {/* Actions */}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Pressable
-          onPress={onAdjust}
+        {/* Actions — separated by a dashed rule in the design. Drawn with SVG:
+            RN ignores `borderStyle: 'dashed'` on a top-only border. */}
+        <DashedRule color={C.stone} marginTop={10} marginBottom={10} />
+        <View
           style={{
-            flex: 1,
             flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: C.paper,
-            borderWidth: 1,
-            borderColor: C.inkSoft,
-            borderRadius: 10,
-            paddingVertical: 10,
-            gap: 6,
+            gap: 8,
           }}
         >
-          <Text style={{ fontSize: 12, fontWeight: '600', color: C.clay }}>
-            ✎
-          </Text>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: C.ink }}>
-            Adjust queue
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={onPastPreps}
-          style={{
-            flex: 1,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: C.ink,
-            borderRadius: 10,
-            paddingVertical: 10,
-            gap: 6,
-          }}
-        >
-          <Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>
-            Past preps
-          </Text>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>
-            ›
-          </Text>
-        </Pressable>
+          <Pressable
+            onPress={onAdjust}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: C.card,
+              borderWidth: 1.2,
+              borderColor: C.ink,
+              borderRadius: 10,
+              paddingVertical: 10,
+              gap: 6,
+              ...stickerShadowSm,
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '600', color: C.clay }}>
+              ✎
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: C.ink }}>
+              Adjust queue
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onPastPreps}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: C.ink,
+              borderWidth: 1.2,
+              borderColor: C.ink,
+              borderRadius: 10,
+              paddingVertical: 10,
+              gap: 6,
+              ...stickerShadowSm,
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>
+              Past preps
+            </Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>
+              ›
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );

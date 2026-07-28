@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { emailSignIn } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
+import { SketchyButton } from '@/components/ui/SketchyButton';
+import { Field } from '@/components/ui/Field';
+import { colors } from '@/constants/colors';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -50,7 +52,7 @@ export default function SignInScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -61,150 +63,90 @@ export default function SignInScreen() {
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          style={{ position: 'absolute', top: 8, left: 16, padding: 8, zIndex: 1 }}
+          style={styles.back}
         >
-          <Text style={{ fontSize: 28, color: '#1a2a30' }}>‹</Text>
+          <Text style={styles.backChevron}>‹</Text>
+          <Text style={styles.backLabel}>Back</Text>
         </Pressable>
 
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 48 }}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Title */}
-          <Text
-            style={{
-              fontFamily: 'InstrumentSerif_400Regular',
-              fontSize: 36,
-              color: '#1a2a30',
-              marginBottom: 8,
-            }}
-          >
-            Sign in
-          </Text>
-          <Text style={{ fontSize: 14, color: '#4A5560', marginBottom: 36 }}>
-            ¡Bienvenido de vuelta! Pick up where you left off.
-          </Text>
+          {/* Marco lockup — avatar beside a handwritten greeting */}
+          <View style={styles.lockup}>
+            <MarcoAvatar size={42} />
+            <Text style={styles.lockupLine}>
+              ¡Bienvenido de vuelta! Pick up{'\n'}where you left off.
+            </Text>
+          </View>
 
-          {/* Email field */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
+          <Text style={styles.heading}>Sign in</Text>
+
+          <View style={styles.form}>
+            <Field
+              label="Email"
+              mono
               value={email}
-              onChangeText={(v) => { setEmail(v); setEmailError(null); }}
+              onChangeText={(v) => {
+                setEmail(v);
+                setEmailError(null);
+              }}
+              error={emailError}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
               textContentType="emailAddress"
               placeholder="you@example.com"
-              placeholderTextColor="#ABABAB"
-              style={[
-                styles.input,
-                emailError ? styles.inputError : null,
-              ]}
             />
-            {emailError ? (
-              <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.fieldError}>{emailError}</Text>
-                {emailError.includes('Create one') ? (
-                  <Pressable onPress={() => router.replace('/(auth)/signup')}>
-                    <Text style={{ fontSize: 13, color: '#0F4C5C', fontWeight: '600' }}>
-                      Create account →
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
 
-          {/* Password field */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={styles.label}>Password</Text>
-            <View style={{ position: 'relative' }}>
-              <TextInput
-                value={password}
-                onChangeText={(v) => { setPassword(v); setPasswordError(null); }}
-                secureTextEntry={!showPassword}
-                textContentType="password"
-                placeholder="••••••••"
-                placeholderTextColor="#ABABAB"
-                style={[
-                  styles.input,
-                  { paddingRight: 52 },
-                  passwordError ? styles.inputError : null,
-                ]}
-              />
-              <Pressable
-                onPress={() => setShowPassword((v) => !v)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                style={{
-                  position: 'absolute',
-                  right: 16,
-                  top: 0,
-                  bottom: 0,
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 13, color: '#4A5560', fontWeight: '500' }}>
-                  {showPassword ? 'Hide' : 'Show'}
-                </Text>
+            {emailError?.includes('Create one') ? (
+              <Pressable onPress={() => router.replace('/(auth)/signup')} style={styles.inlineAction}>
+                <Text style={styles.inlineActionText}>Create account →</Text>
               </Pressable>
-            </View>
-            {passwordError ? (
-              <Text style={[styles.fieldError, { marginTop: 6 }]}>{passwordError}</Text>
             ) : null}
-          </View>
 
-          {/* Forgot password */}
-          <Pressable style={{ alignSelf: 'flex-end', marginBottom: 32 }}>
-            <Text style={{ fontSize: 13, color: '#0F4C5C', fontWeight: '500' }}>
-              Forgot password?
-            </Text>
-          </Pressable>
-
-          {/* CTA */}
-          <View style={{ position: 'relative', marginBottom: 24, opacity: fieldsValid ? 1 : 0.4 }}>
-            <View
-              style={{
-                position: 'absolute',
-                top: 3,
-                left: 3,
-                right: -3,
-                height: 56,
-                backgroundColor: '#E36414',
-                borderRadius: 14,
+            <Field
+              label="Password"
+              value={password}
+              onChangeText={(v) => {
+                setPassword(v);
+                setPasswordError(null);
               }}
+              error={passwordError}
+              secureTextEntry={!showPassword}
+              textContentType="password"
+              placeholder="••••••••"
+              trailing={
+                <Pressable
+                  onPress={() => setShowPassword((v) => !v)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <Text style={styles.eyeToggle}>{showPassword ? 'Hide' : 'Show'}</Text>
+                </Pressable>
+              }
             />
-            <Pressable
-              disabled={!canSubmit}
-              onPress={() => void handleSignIn()}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#0D3F4E' : '#0F4C5C',
-                borderRadius: 14,
-                height: 56,
-                alignItems: 'center',
-                justifyContent: 'center',
-              })}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-                  Sign in
-                </Text>
-              )}
+
+            <Pressable style={styles.forgotWrap}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
             </Pressable>
           </View>
 
-          {/* Switch to sign up */}
-          <Pressable
-            onPress={() => router.replace('/(auth)/signup')}
-            style={{ alignItems: 'center' }}
-          >
-            <Text style={{ fontSize: 15, color: '#4A5560' }}>
-              New here?{' '}
-              <Text style={{ color: '#0F4C5C', fontWeight: '600' }}>Create account</Text>
+          <View style={{ flex: 1 }} />
+
+          <SketchyButton
+            label="Sign in"
+            variant="primary"
+            disabled={!canSubmit}
+            loading={isLoading}
+            onPress={() => void handleSignIn()}
+          />
+
+          <Pressable onPress={() => router.replace('/(auth)/signup')} style={styles.footer}>
+            <Text style={styles.footerText}>
+              New here? <Text style={styles.footerLink}>Create account</Text>
             </Text>
           </Pressable>
         </ScrollView>
@@ -214,29 +156,53 @@ export default function SignInScreen() {
 }
 
 const styles = {
-  label: {
-    fontSize: 11,
-    letterSpacing: 1,
-    color: '#4A5560',
-    marginBottom: 6,
+  safeArea: { flex: 1, backgroundColor: colors.bg },
+  back: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    paddingHorizontal: 24,
+    height: 28,
+  },
+  backChevron: { fontSize: 22, lineHeight: 24, color: colors.inkSoft },
+  backLabel: { fontSize: 14, fontWeight: '500' as const, color: colors.inkSoft },
+  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 28 },
+  lockup: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    marginBottom: 14,
+  },
+  lockupLine: {
+    flex: 1,
+    fontFamily: 'Caveat_400Regular',
+    fontSize: 19,
+    lineHeight: 21,
+    color: colors.clay,
+  },
+  heading: {
+    fontFamily: 'InstrumentSerif_400Regular',
+    fontSize: 30,
+    lineHeight: 32,
+    letterSpacing: -0.6,
+    color: colors.ink,
+  },
+  form: { paddingTop: 22 },
+  inlineAction: { marginTop: -8, marginBottom: 10 },
+  inlineActionText: { fontSize: 13, fontWeight: '600' as const, color: colors.teal },
+  eyeToggle: { fontSize: 13, fontWeight: '500' as const, color: colors.inkSoft },
+  forgotWrap: { alignSelf: 'flex-end' as const, marginTop: -4 },
+  forgotText: {
+    fontSize: 13.5,
     fontWeight: '600' as const,
-    textTransform: 'uppercase' as const,
+    color: colors.ink,
+    textDecorationLine: 'underline' as const,
   },
-  input: {
-    height: 52,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(26, 42, 48, 0.15)',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#1a2a30',
-  },
-  inputError: {
-    borderColor: '#DC2626',
-  },
-  fieldError: {
-    fontSize: 13,
-    color: '#DC2626',
+  footer: { alignItems: 'center' as const, paddingTop: 20 },
+  footerText: { fontSize: 13.5, color: colors.inkSoft },
+  footerLink: {
+    color: colors.ink,
+    fontWeight: '600' as const,
+    textDecorationLine: 'underline' as const,
   },
 } as const;

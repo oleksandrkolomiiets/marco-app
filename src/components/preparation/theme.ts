@@ -4,23 +4,28 @@
 // sticker visual language — warm cream surfaces, hard ink-shadow
 // offsets, mixed Instrument Serif + JetBrains Mono + Caveat.
 
+import { colors } from '@/constants/colors';
+
 export const preparationColors = {
-  // Surfaces
-  bg: '#FEFBF5',          // page background (warmest cream)
-  cream: '#FAF8F5',       // alt cream tint
+  // Surfaces.
+  // NOTE: `bg` and `cream` used to be swapped relative to the prototype —
+  // the design's page background is #FAF8F5 (M.bg) and the warmer #FEFBF5
+  // (M.cream) is the card tint, not the other way round.
+  bg: colors.bg,          // page background
+  cream: colors.cream,    // warm card tint
   card: '#FFFFFF',        // white card / L badge
-  paper: '#F3EEE5',       // pale cream block (hero, suggestion chip bg)
-  stone: '#C7BFB2',       // stone divider / chip border
+  paper: colors.bgWarm,   // pale cream block (hero, suggestion chip bg)
+  stone: colors.lineSoft, // stone divider / chip border
   stoneSoft: '#ECE7DC',   // very pale stone (inset shadow ring)
 
   // Ink
-  ink: '#1A2A30',         // primary text / hard shadow color
+  ink: colors.ink,        // primary text / hard shadow color
   inkSoft: 'rgba(26,42,48,0.12)', // hairline borders
-  mute: '#4A5560',        // secondary text / muted icons
+  mute: colors.inkSoft,   // secondary text / muted icons
 
   // Accents
-  clay: '#E36414',        // PREP tile, plan-missed, note Caveat quote
-  teal: '#0F4C5C',        // W tile, plan-worked, big % preparation, checks
+  clay: colors.clay,      // PREP tile, plan-missed, note Caveat quote
+  teal: colors.teal,      // W tile, plan-worked, big % preparation, checks
 
   // Status overlays
   scrim: 'rgba(20,28,32,0.55)',

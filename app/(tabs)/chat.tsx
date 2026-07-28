@@ -38,7 +38,8 @@ import type {
   MatchPrepPrefill,
 } from '@/types/api';
 
-const BG = '#F5F0EA';
+// Page background is the design's standard off-white (M.bg), not a bespoke tone.
+const BG = '#FAF8F5';
 const PAGE_SIZE = 30;
 
 type LocalMessage = ChatMessage & {

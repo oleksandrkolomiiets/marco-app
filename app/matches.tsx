@@ -6,16 +6,29 @@ import { useQueryClient } from '@tanstack/react-query';
 import { MatchLogForm } from '@/components/chat/MatchLogForm';
 import { MatchDetailSheet } from '@/components/matches/MatchDetailSheet';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
+import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
 import { computeMatchStats, matchesQueryKey, useMatches } from '@/hooks/useMatches';
 import type { MatchLog } from '@/types/api';
+
+// Hard 2x2 ink offset — `box-shadow: 2px 2px 0` on the match rows and the
+// summary strip in the design.
+const hardShadowSm = {
+  shadowColor: '#1A2A30',
+  shadowOffset: { width: 2, height: 2 },
+  shadowOpacity: 1,
+  shadowRadius: 0,
+  elevation: 2,
+} as const;
 
 const COLORS = {
   bg: '#FAF8F5',
   card: '#FFFFFF',
   cardTinted: '#F5EFE3',
+  cream: '#FEFBF5',
   ink: '#1A2A30',
   mute: '#4A5560',
   border: 'rgba(26,42,48,0.12)',
+  stone: '#C7BFB2',
   teal: '#0F4C5C',
   orange: '#E36414',
   white: '#FFFFFF',
@@ -242,22 +255,19 @@ const StatsHeader = ({ stats }: StatsHeaderProps) => {
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 14,
-        backgroundColor: COLORS.cardTinted,
-        borderRadius: 16,
-        padding: 14,
+        gap: 12,
+        // Cream with the sticker treatment, per the design's summary strip.
+        backgroundColor: COLORS.cream,
+        borderWidth: 1.4,
+        borderColor: COLORS.ink,
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        ...hardShadowSm,
       }}
     >
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: COLORS.white,
-          borderWidth: 1,
-          borderColor: COLORS.border,
-        }}
-      />
+      {/* This was an empty placeholder circle — the design puts Marco here. */}
+      <MarcoAvatar size={42} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.ink }}>
           {stats.total} matches · last 30 days
@@ -320,19 +330,21 @@ const Chip = ({ label, active, onPress }: ChipProps) => (
   <Pressable
     onPress={onPress}
     style={{
-      paddingHorizontal: 14,
-      paddingVertical: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       borderRadius: 999,
-      backgroundColor: active ? COLORS.ink : COLORS.white,
-      borderWidth: 1,
-      borderColor: active ? COLORS.ink : COLORS.border,
+      // Inactive chips are transparent on the page in the design, with a warm
+      // stone border — not white on a faint hairline.
+      backgroundColor: active ? COLORS.ink : 'transparent',
+      borderWidth: 1.2,
+      borderColor: active ? COLORS.ink : COLORS.stone,
     }}
   >
     <Text
       style={{
-        fontSize: 13,
-        fontWeight: '600',
-        color: active ? COLORS.white : COLORS.ink,
+        fontSize: 12,
+        fontWeight: active ? '700' : '500',
+        color: active ? COLORS.white : COLORS.mute,
       }}
     >
       {label}
@@ -358,20 +370,26 @@ const MatchRow = ({ match, onPress }: { match: MatchLog; onPress: () => void }) 
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 10,
         backgroundColor: COLORS.white,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        padding: 12,
+        borderRadius: 12,
+        // Design gives each row the sticker treatment: solid ink outline plus
+        // a hard 2x2 offset, not a faint 12%-opacity hairline.
+        borderWidth: 1.4,
+        borderColor: COLORS.ink,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        ...hardShadowSm,
       }}
     >
       <View
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
+          width: 30,
+          height: 30,
+          borderRadius: 8,
           backgroundColor: badgeColor,
+          borderWidth: 1.2,
+          borderColor: COLORS.ink,
           alignItems: 'center',
           justifyContent: 'center',
         }}

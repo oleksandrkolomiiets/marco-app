@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
+import { DashedBox } from '@/components/ui/DashedBox';
 import {
   preparationColors as PC,
   stickerShadow,
@@ -63,14 +65,23 @@ export function MessageBubble({
         <Pressable onLongPress={onLongPress} delayLongPress={400} style={{ maxWidth: '80%' }}>
           <View
             style={{
-              paddingHorizontal: 16,
+              paddingHorizontal: 14,
               paddingVertical: 10,
-              borderRadius: 20,
+              borderRadius: 18,
               borderBottomRightRadius: 4,
               backgroundColor: '#0F4C5C',
+              // Design gives both bubbles an ink outline and a hard 2x2
+              // offset; the user bubble had neither.
+              borderWidth: 1.4,
+              borderColor: '#1A2A30',
+              shadowColor: '#1A2A30',
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 0,
+              elevation: 3,
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontSize: 15, lineHeight: 22 }}>{message.content}</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 14, lineHeight: 19 }}>{message.content}</Text>
           </View>
         </Pressable>
       </View>
@@ -86,11 +97,15 @@ export function MessageBubble({
         <Pressable onLongPress={onLongPress} delayLongPress={400}>
           <View
             style={{
-              paddingHorizontal: 16,
+              paddingHorizontal: 14,
               paddingVertical: 10,
-              borderRadius: 20,
+              borderRadius: 18,
               borderBottomLeftRadius: 4,
-              backgroundColor: '#FFFFFF',
+              // Cream, not white — and with the ink outline the design pairs
+              // with every bubble.
+              backgroundColor: '#FEFBF5',
+              borderWidth: 1.4,
+              borderColor: '#1A2A30',
               shadowColor: '#1A2A30',
               shadowOffset: { width: 2, height: 2 },
               shadowOpacity: 1,
@@ -98,7 +113,7 @@ export function MessageBubble({
               elevation: 3,
             }}
           >
-            <Text style={{ color: '#0B1416', fontSize: 15, lineHeight: 22 }}>{message.content}</Text>
+            <Text style={{ color: '#1A2A30', fontSize: 14, lineHeight: 19 }}>{message.content}</Text>
           </View>
         </Pressable>
         {showLogTag && (
@@ -250,6 +265,14 @@ function LessonCard({
   const lesson = lessons.find((l) => l.slug === slug);
   const durationSec = lesson?.duration_seconds ?? null;
   const thumbnailUrl = lesson?.thumbnail_url ?? null;
+  // Press feedback is tracked in state rather than via a ({ pressed }) => ({})
+  // style function: react-native-css-interop (NativeWind) drops functional
+  // style props on Pressable, so the dimming never actually applied.
+  const [pressed, setPressed] = useState(false);
+  const pressProps = {
+    onPressIn: () => setPressed(true),
+    onPressOut: () => setPressed(false),
+  };
   // Premium lessons can't be opened — tapping should surface the same
   // upgrade sheet the journey screen uses for locked nodes, not the
   // detail screen (which falls through to "Couldn't load this lesson").
@@ -260,9 +283,14 @@ function LessonCard({
       <Pressable
         onPress={onLockedPress}
         hitSlop={4}
-        style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+        {...pressProps}
+        style={{ opacity: pressed ? 0.85 : 1 }}
       >
-        <View
+        {/* Dashed outline via SVG — RN can't dash a rounded border. */}
+        <DashedBox
+          radius={12}
+          color="#C7BFB2"
+          background={PC.bg}
           style={[
             {
               flexDirection: 'row',
@@ -270,11 +298,6 @@ function LessonCard({
               gap: 10,
               paddingVertical: 8,
               paddingHorizontal: 10,
-              borderRadius: 12,
-              backgroundColor: PC.bg,
-              borderWidth: 1,
-              borderStyle: 'dashed',
-              borderColor: '#c7bfb2',
               marginTop: 10,
             },
             stickerShadow,
@@ -321,7 +344,7 @@ function LessonCard({
             </Text>
           </View>
           <Text style={{ color: '#9CA3AF', fontSize: 14, fontWeight: '700' }}>🔒</Text>
-        </View>
+        </DashedBox>
       </Pressable>
     );
   }
@@ -339,7 +362,8 @@ function LessonCard({
     <Pressable
       onPress={onPress}
       hitSlop={4}
-      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+      {...pressProps}
+      style={{ opacity: pressed ? 0.85 : 1 }}
     >
       <View
         style={[

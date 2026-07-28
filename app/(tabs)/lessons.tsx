@@ -40,20 +40,21 @@ export default function LessonsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F0E8' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FAF8F5' }} edges={['top']}>
       <View
         style={{
           paddingHorizontal: 20,
           paddingTop: 16,
           paddingBottom: 12,
-          backgroundColor: '#F5F0E8',
+          backgroundColor: '#FAF8F5',
         }}
       >
         <Text
           style={{
             fontFamily: 'InstrumentSerif_400Regular',
             fontSize: 24,
-            color: '#1A1A1A',
+            letterSpacing: -0.48,
+            color: '#1A2A30',
           }}
         >
           Your padel journey
@@ -66,10 +67,26 @@ export default function LessonsScreen() {
             marginTop: 4,
           }}
         >
-          <Text style={{ fontSize: 13, color: '#E36414', fontStyle: 'italic' }}>
+          {/* Handwritten Caveat, not italic sans — this line carries Marco's
+              voice in the design. */}
+          <Text
+            style={{
+              fontFamily: 'Caveat_400Regular',
+              fontSize: 17,
+              color: '#E36414',
+            }}
+          >
             {completed} of {total} · keep going
           </Text>
-          <Text style={{ fontSize: 13, color: '#8B8B8B' }}>{percent}%</Text>
+          <Text
+            style={{
+              fontFamily: 'JetBrainsMono_400Regular',
+              fontSize: 11,
+              color: '#4A5560',
+            }}
+          >
+            {percent}%
+          </Text>
         </View>
         <View style={{ marginTop: 8 }}>
           <ProgressBar current={completed} total={total} />

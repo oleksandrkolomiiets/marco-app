@@ -387,7 +387,7 @@ const PrepRow = ({ preparation, upcoming, match, onPress, onSetGrade }: PrepRowP
           gap: 12,
           backgroundColor: C.card,
           borderRadius: 14,
-          borderWidth: 1,
+          borderWidth: 1.4,
           borderColor: C.ink,
           padding: 12,
         },
@@ -399,7 +399,9 @@ const PrepRow = ({ preparation, upcoming, match, onPress, onSetGrade }: PrepRowP
           width: 56,
           borderRadius: 10,
           backgroundColor: tileBg,
-          borderWidth: upcoming || isWin ? 0 : 1,
+          // The PREP / W / L tile keeps its ink outline in every state — the
+          // design never drops it on the filled variants.
+          borderWidth: 1.2,
           borderColor: C.ink,
           alignItems: 'center',
           justifyContent: 'center',

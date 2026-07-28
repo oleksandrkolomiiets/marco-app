@@ -21,6 +21,7 @@ import {
   useUpdateMatchPreparation,
 } from '@/hooks/usePreparation';
 import type { DrillInput, MatchLog, MatchPreparation, MatchPreparationPlanGrade } from '@/types/api';
+import { DashedBox } from '@/components/ui/DashedBox';
 import {
   preparationColors as C,
   preparationFonts as F,
@@ -464,6 +465,9 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
             <Text style={{ fontFamily: F.mono, fontSize: 16, color: C.mute }}>vs</Text>
             <Text
               style={{
+                // flex:1 so a long opponent name wraps across the allowed two
+                // lines instead of sizing to intrinsic width and being clipped.
+                flex: 1,
                 fontFamily: F.serif,
                 fontSize: 28,
                 color: C.ink,
@@ -579,21 +583,15 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
         </View>
 
         {drills.length === 0 ? (
-          <View
-            style={{
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: C.stone,
-              borderStyle: 'dashed',
-              padding: 16,
-              alignItems: 'center',
-              marginBottom: 8,
-            }}
+          <DashedBox
+            radius={12}
+            color={C.stone}
+            style={{ padding: 16, alignItems: 'center', marginBottom: 8 }}
           >
             <Text style={{ fontFamily: F.mono, fontSize: 12, color: C.mute }}>
               No drills yet — add one below or ask Marco.
             </Text>
-          </View>
+          </DashedBox>
         ) : (
           drills.map((d, i) => (
             <DrillRow

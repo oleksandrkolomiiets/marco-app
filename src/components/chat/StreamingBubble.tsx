@@ -41,11 +41,15 @@ export function StreamingBubble({ source }: StreamingBubbleProps) {
       <View
         style={{
           maxWidth: '75%',
-          paddingHorizontal: 16,
+          paddingHorizontal: 14,
           paddingVertical: 10,
-          borderRadius: 20,
+          borderRadius: 18,
           borderBottomLeftRadius: 4,
-          backgroundColor: '#FFFFFF',
+          // Matches the settled Marco bubble in MessageBubble.tsx — cream
+          // with an ink outline, not plain white.
+          backgroundColor: '#FEFBF5',
+          borderWidth: 1.4,
+          borderColor: '#1A2A30',
           shadowColor: '#1A2A30',
           shadowOffset: { width: 2, height: 2 },
           shadowOpacity: 1,
@@ -54,7 +58,7 @@ export function StreamingBubble({ source }: StreamingBubbleProps) {
         }}
       >
         {displayText ? (
-          <Text style={{ color: '#0B1416', fontSize: 15, lineHeight: 22 }}>
+          <Text style={{ color: '#1A2A30', fontSize: 14, lineHeight: 19 }}>
             {displayText}
           </Text>
         ) : (

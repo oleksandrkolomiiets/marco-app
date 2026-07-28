@@ -3,11 +3,13 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Svg, { Line, Rect } from 'react-native-svg';
-import { Button } from '@/components/ui/Button';
+import { SketchyButton } from '@/components/ui/SketchyButton';
+import { SelectableRow } from '@/components/ui/SelectableRow';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
 import { updateMe } from '@/api/users';
 import { useAuthStore } from '@/stores/authStore';
+import { colors } from '@/constants/colors';
 import type { CourtSide, DominantHand, SkillLevel } from '@/types/api';
 
 type PlayFrequency = 'monthly' | 'biweekly' | 'weekly' | '2-3x_weekly' | '4x_weekly';
@@ -23,8 +25,26 @@ type OnboardingData = {
 
 const TOTAL_STEPS = 5;
 
+// Shared question/helper type for every step, matching the prototype's
+// OnbScaffold: Instrument Serif 30 over a 14px muted helper line.
+const stepStyles = {
+  question: {
+    fontFamily: 'InstrumentSerif_400Regular',
+    fontSize: 30,
+    lineHeight: 32,
+    letterSpacing: -0.6,
+    color: colors.ink,
+  },
+  helper: {
+    fontSize: 14,
+    color: colors.inkSoft,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+} as const;
+
 const QUOTES: Record<number, string> = {
-  1: "We'll tailor coaching to your level.",
+  1: "¡Hola! Tell me about you — I'll skip the boring bits.",
   2: 'More court time → faster progress. But not by much.',
   3: 'Tells me which side to demo cues from.',
   4: "Court side shapes 70% of what I'll teach you next.",
@@ -48,34 +68,18 @@ function Step1({
 }) {
   return (
     <View>
-      <Text style={{ fontFamily: 'InstrumentSerif_400Regular', fontSize: 32, color: '#0F4C5C', marginBottom: 4 }}>
-        What&apos;s your level?
-      </Text>
-      <Text style={{ fontSize: 15, color: '#6B7280', marginBottom: 20 }}>
-        We&apos;ll tailor Marco&apos;s coaching to you.
-      </Text>
-      <View style={{ gap: 12 }}>
-        {SKILL_LEVELS.map((l) => {
-          const active = value === l.value;
-          return (
-            <Pressable
-              key={l.value}
-              onPress={() => onChange(l.value)}
-              style={{
-                padding: 16,
-                borderRadius: 16,
-                borderWidth: 2,
-                borderColor: active ? '#E36414' : '#E5E7EB',
-                backgroundColor: active ? '#FCE9DC' : 'white',
-              }}
-            >
-              <Text style={{ fontSize: 16, fontWeight: '600', color: active ? '#E36414' : '#0F4C5C' }}>
-                {l.title}
-              </Text>
-              <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{l.subtitle}</Text>
-            </Pressable>
-          );
-        })}
+      <Text style={stepStyles.question}>How would you rate your padel?</Text>
+      <Text style={stepStyles.helper}>Honest is best. We can change this later.</Text>
+      <View style={{ gap: 10 }}>
+        {SKILL_LEVELS.map((l) => (
+          <SelectableRow
+            key={l.value}
+            label={l.title}
+            subtitle={l.subtitle}
+            selected={value === l.value}
+            onPress={() => onChange(l.value)}
+          />
+        ))}
       </View>
     </View>
   );
@@ -100,30 +104,17 @@ function Step2({
 }) {
   return (
     <View>
-      <Text style={{ fontFamily: 'InstrumentSerif_400Regular', fontSize: 32, color: '#0F4C5C', marginBottom: 20 }}>
-        How often do you play?
-      </Text>
-      <View style={{ gap: 12 }}>
-        {FREQUENCIES.map((f) => {
-          const active = value === f.value;
-          return (
-            <Pressable
-              key={f.value}
-              onPress={() => onChange(f.value)}
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                borderWidth: active ? 2 : 1,
-                borderColor: active ? '#0F4C5C' : '#E5E7EB',
-                backgroundColor: 'white',
-              }}
-            >
-              <Text style={{ fontSize: 16, fontWeight: active ? '600' : '400', color: '#0F4C5C' }}>
-                {f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <Text style={stepStyles.question}>How often do you play?</Text>
+      <View style={{ gap: 10, marginTop: 20 }}>
+        {FREQUENCIES.map((f) => (
+          <SelectableRow
+            key={f.value}
+            label={f.label}
+            selected={value === f.value}
+            onPress={() => onChange(f.value)}
+            height={50}
+          />
+        ))}
       </View>
     </View>
   );
@@ -146,34 +137,23 @@ function Step3({
 }) {
   return (
     <View>
-      <Text style={{ fontFamily: 'InstrumentSerif_400Regular', fontSize: 32, color: '#0F4C5C', marginBottom: 24 }}>
-        Dominant hand?
-      </Text>
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        {HANDS.map((h) => {
-          const active = value === h.value;
-          return (
-            <Pressable
-              key={h.value}
+      {/* No helper line here — Marco's Caveat quote above already says it. */}
+      <Text style={[stepStyles.question, { marginBottom: 24 }]}>Dominant hand?</Text>
+      <View style={{ flexDirection: 'row', gap: 14 }}>
+        {HANDS.map((h) => (
+          <View key={h.value} style={{ flex: 1 }}>
+            <SelectableRow
+              label={h.label}
+              selected={value === h.value}
               onPress={() => onChange(h.value)}
-              style={{
-                flex: 1,
-                paddingVertical: 24,
-                borderRadius: 16,
-                borderWidth: 1.5,
-                borderColor: active ? '#0F4C5C' : '#E5E7EB',
-                backgroundColor: active ? '#0F4C5C' : 'white',
-                alignItems: 'center',
-                gap: 10,
-              }}
+              tone="teal"
+              height={120}
+              centered
             >
-              <Text style={{ fontSize: 34 }}>{h.emoji}</Text>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: active ? 'white' : '#0F4C5C' }}>
-                {h.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+              <Text style={{ fontSize: 36, marginBottom: 8 }}>{h.emoji}</Text>
+            </SelectableRow>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -182,15 +162,23 @@ function Step3({
 // ── Step 4: Court side ────────────────────────────────────────────────────────
 
 function CourtDiagram({ selected }: { selected: CourtSide | null }) {
-  const leftFill = selected === 'left' ? '#FAD5BE' : 'white';
-  const rightFill = selected === 'right' ? '#FAD5BE' : 'white';
+  // The prototype's CourtMini highlights the chosen half in translucent clay
+  // with a dashed clay outline, over ink court lines.
+  const leftOn = selected === 'left';
+  const rightOn = selected === 'right';
   return (
     <Svg width="100%" height={150} viewBox="0 0 300 150">
-      <Rect x={2} y={2} width={146} height={146} fill={leftFill} />
-      <Rect x={152} y={2} width={146} height={146} fill={rightFill} />
-      <Rect x={1} y={1} width={298} height={148} fill="none" stroke="#D1D5DB" strokeWidth={2} rx={6} />
-      <Line x1={149} y1={1} x2={149} y2={149} stroke="#9CA3AF" strokeWidth={1.5} strokeDasharray="5,4" />
-      <Line x1={1} y1={75} x2={299} y2={75} stroke="#D1D5DB" strokeWidth={1} />
+      <Rect x={2} y={2} width={146} height={146} fill={leftOn ? colors.clay : 'transparent'} opacity={leftOn ? 0.22 : 0} />
+      <Rect x={152} y={2} width={146} height={146} fill={rightOn ? colors.clay : 'transparent'} opacity={rightOn ? 0.22 : 0} />
+      <Rect x={1} y={1} width={298} height={148} fill="none" stroke={colors.ink} strokeWidth={1.6} rx={3} />
+      <Line x1={149} y1={1} x2={149} y2={149} stroke={colors.ink} strokeWidth={1.4} strokeDasharray="3,3" />
+      <Line x1={1} y1={75} x2={299} y2={75} stroke={colors.ink} strokeWidth={1} opacity={0.5} />
+      {leftOn ? (
+        <Rect x={2} y={2} width={146} height={146} fill="none" stroke={colors.clay} strokeWidth={1.4} strokeDasharray="3,2" />
+      ) : null}
+      {rightOn ? (
+        <Rect x={152} y={2} width={146} height={146} fill="none" stroke={colors.clay} strokeWidth={1.4} strokeDasharray="3,2" />
+      ) : null}
     </Svg>
   );
 }
@@ -204,39 +192,29 @@ function Step4({
 }) {
   return (
     <View>
-      <Text style={{ fontFamily: 'InstrumentSerif_400Regular', fontSize: 32, color: '#0F4C5C', marginBottom: 20 }}>
-        Which side do you play?
-      </Text>
+      {/* No helper — Marco's quote above already carries this line. */}
+      <Text style={[stepStyles.question, { marginBottom: 20 }]}>Which side do you play?</Text>
       <CourtDiagram selected={value} />
-      <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
         {(
           [
             { side: 'left' as CourtSide, label: 'Left (Backhand)' },
             { side: 'right' as CourtSide, label: 'Right (Forehand)' },
           ] as const
-        ).map(({ side, label }) => {
-          const active = value === side;
-          return (
-            <Pressable
-              key={side}
+        ).map(({ side, label }) => (
+          <View key={side} style={{ flex: 1 }}>
+            <SelectableRow
+              label={label}
+              selected={value === side}
               onPress={() => onChange(side)}
-              style={{
-                flex: 1,
-                paddingVertical: 14,
-                borderRadius: 100,
-                borderWidth: active ? 2 : 1,
-                borderColor: active ? '#0F4C5C' : '#E5E7EB',
-                backgroundColor: active ? '#E6EDEF' : 'white',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#0F4C5C' }}>{label}</Text>
-            </Pressable>
-          );
-        })}
+              height={48}
+              centered
+            />
+          </View>
+        ))}
       </View>
       <Pressable onPress={() => onChange('either')} style={{ alignSelf: 'center', marginTop: 16 }}>
-        <Text style={{ fontFamily: 'Caveat_400Regular', fontSize: 18, color: '#E36414' }}>
+        <Text style={{ fontFamily: 'Caveat_400Regular', fontSize: 18, color: colors.inkSoft }}>
           I switch sometimes →
         </Text>
       </Pressable>
@@ -257,31 +235,19 @@ const GOALS: { value: Goal; label: string }[] = [
 function Step5({ value, onChange }: { value: Goal | null; onChange: (v: Goal) => void }) {
   return (
     <View>
-      <Text style={{ fontFamily: 'InstrumentSerif_400Regular', fontSize: 32, color: '#0F4C5C', marginBottom: 4 }}>
-        What&apos;s your #1 goal right now?
-      </Text>
-      <Text style={{ fontSize: 15, color: '#6B7280', marginBottom: 20 }}>Pick one. Be a little selfish.</Text>
-      <View style={{ gap: 12 }}>
-        {GOALS.map((g) => {
-          const active = value === g.value;
-          return (
-            <Pressable
-              key={g.value}
-              onPress={() => onChange(g.value)}
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                borderWidth: active ? 0 : 1,
-                borderColor: '#E5E7EB',
-                backgroundColor: active ? '#E36414' : 'white',
-              }}
-            >
-              <Text style={{ fontSize: 16, fontWeight: '600', color: active ? 'white' : '#0F4C5C' }}>
-                {g.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <Text style={stepStyles.question}>What&apos;s your #1 goal right now?</Text>
+      <Text style={stepStyles.helper}>Pick one. Be a little selfish.</Text>
+      <View style={{ gap: 10 }}>
+        {GOALS.map((g) => (
+          <SelectableRow
+            key={g.value}
+            label={g.label}
+            selected={value === g.value}
+            onPress={() => onChange(g.value)}
+            tone="clay"
+            height={50}
+          />
+        ))}
       </View>
     </View>
   );
@@ -341,27 +307,27 @@ export default function OnboardingScreen() {
   const handleSkip = () => void persist(data);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header row */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16 }}>
-        <Text style={{ fontFamily: 'InstrumentSerif_400Regular', fontSize: 16, color: '#0F4C5C' }}>
+        <Text style={{ fontFamily: 'JetBrainsMono_400Regular', fontSize: 13, color: colors.inkSoft }}>
           {step} / {TOTAL_STEPS}
         </Text>
         <Pressable onPress={handleSkip} disabled={saving} hitSlop={12}>
-          <Text style={{ fontSize: 15, color: '#9CA3AF' }}>Skip</Text>
+          <Text style={{ fontSize: 13, color: colors.inkSoft }}>Skip</Text>
         </Pressable>
       </View>
 
       {/* Progress segments */}
-      <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 24, marginTop: 10 }}>
+      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 24, marginTop: 18 }}>
         {Array.from({ length: TOTAL_STEPS }, (_, i) => (
           <View
             key={i}
             style={{
               flex: 1,
-              height: 3,
-              borderRadius: 99,
-              backgroundColor: i < step ? '#E36414' : '#E5E7EB',
+              height: 4,
+              borderRadius: 3,
+              backgroundColor: i < step ? colors.clay : 'rgba(26,42,48,0.15)',
             }}
           />
         ))}
@@ -374,9 +340,18 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Marco quote */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 24 }}>
-          <MarcoAvatar size={40} />
-          <Text style={{ fontFamily: 'Caveat_400Regular', fontSize: 18, color: '#E36414', flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 24 }}>
+          <MarcoAvatar size={56} />
+          <Text
+            style={{
+              flex: 1,
+              paddingTop: 4,
+              fontFamily: 'Caveat_400Regular',
+              fontSize: 18,
+              lineHeight: 20,
+              color: colors.clay,
+            }}
+          >
             {QUOTES[step]}
           </Text>
         </View>
@@ -422,10 +397,12 @@ export default function OnboardingScreen() {
       </ScrollView>
 
       {/* Continue / Finish */}
-      <View style={{ paddingHorizontal: 24, paddingBottom: 32 }}>
-        <Button
-          label={saving ? 'Saving…' : step === TOTAL_STEPS ? 'Finish' : 'Continue'}
-          disabled={!canContinue || saving}
+      <View style={{ paddingHorizontal: 24, paddingBottom: 28 }}>
+        <SketchyButton
+          label={step === TOTAL_STEPS ? 'Finish' : 'Continue'}
+          variant="primary"
+          loading={saving}
+          disabled={!canContinue}
           onPress={handleContinue}
         />
       </View>

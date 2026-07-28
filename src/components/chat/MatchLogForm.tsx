@@ -68,15 +68,13 @@ function progressDots(step: Step) {
       <View
         key={n}
         style={{
-          width: active ? 20 : 8,
-          height: 8,
-          borderRadius: 4,
+          // Design uses uniform 14x4 bars: clay for done, ink for the current
+          // step, warm stone ahead — not teal/grey pills.
+          width: 14,
+          height: 4,
+          borderRadius: 2,
           marginHorizontal: 2,
-          backgroundColor: done
-            ? '#E36414'
-            : active
-            ? '#0F4C5C'
-            : '#D1D5DB',
+          backgroundColor: done ? '#E36414' : active ? '#1A2A30' : '#C7BFB2',
         }}
       />
     );
@@ -250,9 +248,11 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
             left: 0,
             right: 0,
             height: SHEET_HEIGHT,
-            backgroundColor: '#FAFAF8',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
+            backgroundColor: '#FEFBF5',
+            borderTopWidth: 1.6,
+            borderTopColor: '#1A2A30',
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: -4 },
             shadowOpacity: 0.12,
@@ -262,7 +262,7 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
         >
         {/* Drag handle */}
         <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
-          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB' }} />
+          <View style={{ width: 44, height: 4, borderRadius: 2, backgroundColor: '#C7BFB2' }} />
         </View>
 
         <KeyboardAvoidingView
@@ -337,28 +337,40 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
                 onPress={onClose}
                 style={{
                   flex: 1,
-                  paddingVertical: 14,
+                  paddingVertical: 12,
                   borderRadius: 14,
-                  borderWidth: 1.5,
-                  borderColor: '#D1D5DB',
+                  borderWidth: 1.6,
+                  borderColor: '#1A2A30',
+                  backgroundColor: '#FFFFFF',
                   alignItems: 'center',
+                  shadowColor: '#1A2A30',
+                  shadowOffset: { width: 2, height: 3 },
+                  shadowOpacity: 1,
+                  shadowRadius: 0,
+                  elevation: 2,
                 }}
               >
-                <Text style={{ color: '#374151', fontWeight: '600' }}>Cancel</Text>
+                <Text style={{ color: '#1A2A30', fontWeight: '600', fontSize: 14 }}>Cancel</Text>
               </Pressable>
             ) : (
               <Pressable
                 onPress={goBack}
                 style={{
                   flex: 1,
-                  paddingVertical: 14,
+                  paddingVertical: 12,
                   borderRadius: 14,
-                  borderWidth: 1.5,
-                  borderColor: '#D1D5DB',
+                  borderWidth: 1.6,
+                  borderColor: '#1A2A30',
+                  backgroundColor: '#FFFFFF',
                   alignItems: 'center',
+                  shadowColor: '#1A2A30',
+                  shadowOffset: { width: 2, height: 3 },
+                  shadowOpacity: 1,
+                  shadowRadius: 0,
+                  elevation: 2,
                 }}
               >
-                <Text style={{ color: '#374151', fontWeight: '600' }}>Back</Text>
+                <Text style={{ color: '#1A2A30', fontWeight: '600', fontSize: 14 }}>Back</Text>
               </Pressable>
             )}
 
@@ -368,10 +380,22 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
                 disabled={!canContinue()}
                 style={{
                   flex: 2,
-                  paddingVertical: 14,
+                  paddingVertical: 12,
                   borderRadius: 14,
-                  backgroundColor: canContinue() ? '#0F4C5C' : '#D1D5DB',
+                  borderWidth: 1.6,
+                  borderColor: '#1A2A30',
+                  backgroundColor: '#0F4C5C',
+                  opacity: canContinue() ? 1 : 0.4,
                   alignItems: 'center',
+                  ...(canContinue()
+                    ? {
+                        shadowColor: '#1A2A30',
+                        shadowOffset: { width: 2, height: 3 },
+                        shadowOpacity: 1,
+                        shadowRadius: 0,
+                        elevation: 2,
+                      }
+                    : null),
                 }}
               >
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Continue</Text>
@@ -382,10 +406,22 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
                 disabled={saving}
                 style={{
                   flex: 2,
-                  paddingVertical: 14,
+                  paddingVertical: 12,
                   borderRadius: 14,
-                  backgroundColor: saving ? '#D1D5DB' : '#0F4C5C',
+                  borderWidth: 1.6,
+                  borderColor: '#1A2A30',
+                  backgroundColor: '#0F4C5C',
+                  opacity: saving ? 0.4 : 1,
                   alignItems: 'center',
+                  ...(saving
+                    ? null
+                    : {
+                        shadowColor: '#1A2A30',
+                        shadowOffset: { width: 2, height: 3 },
+                        shadowOpacity: 1,
+                        shadowRadius: 0,
+                        elevation: 2,
+                      }),
                 }}
               >
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
@@ -614,14 +650,25 @@ function StepResult({ form, setForm }: StepResultProps) {
                 flex: 1,
                 alignItems: 'center',
                 paddingVertical: 24,
-                borderRadius: 16,
-                borderWidth: 1.5,
-                borderColor: selected ? '#0F4C5C' : '#E5E7EB',
+                borderRadius: 12,
+                // Match the rest of the flow: always an outline, ink when
+                // chosen, plus the hard offset.
+                borderWidth: selected ? 1.8 : 1.2,
+                borderColor: selected ? '#1A2A30' : '#C7BFB2',
                 backgroundColor: selected ? '#0F4C5C' : '#fff',
+                ...(selected
+                  ? {
+                      shadowColor: '#1A2A30',
+                      shadowOffset: { width: 2, height: 3 },
+                      shadowOpacity: 1,
+                      shadowRadius: 0,
+                      elevation: 2,
+                    }
+                  : null),
               }}
             >
               <Text style={{ fontSize: 28, marginBottom: 8 }}>{o.emoji}</Text>
-              <Text style={{ fontWeight: '700', fontSize: 15, color: selected ? '#fff' : '#0B1416' }}>
+              <Text style={{ fontWeight: '700', fontSize: 15, color: selected ? '#fff' : '#1A2A30' }}>
                 {o.label}
               </Text>
             </Pressable>
@@ -652,14 +699,23 @@ function StepFeeling({ form, setForm }: StepFeelingProps) {
                 width: isLastRow ? '47%' : '30%',
                 alignItems: 'center',
                 paddingVertical: 16,
-                borderRadius: 14,
-                borderWidth: 1.5,
-                borderColor: selected ? '#0F4C5C' : '#E5E7EB',
-                backgroundColor: selected ? '#EDF4F6' : '#fff',
+                borderRadius: 12,
+                borderWidth: selected ? 1.8 : 1.2,
+                borderColor: selected ? '#1A2A30' : '#C7BFB2',
+                backgroundColor: selected ? '#FEFBF5' : '#fff',
+                ...(selected
+                  ? {
+                      shadowColor: '#1A2A30',
+                      shadowOffset: { width: 2, height: 3 },
+                      shadowOpacity: 1,
+                      shadowRadius: 0,
+                      elevation: 2,
+                    }
+                  : null),
               }}
             >
               <Text style={{ fontSize: 26, marginBottom: 6 }}>{f.emoji}</Text>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: selected ? '#0F4C5C' : '#374151' }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#1A2A30' }}>
                 {f.label}
               </Text>
             </Pressable>
@@ -688,7 +744,7 @@ function StepNotes({ form, setForm }: StepNotesProps) {
         textAlignVertical="top"
         style={{
           backgroundColor: '#fff',
-          borderWidth: 1.5,
+          borderWidth: 1.4,
           borderColor: '#E5E7EB',
           borderRadius: 14,
           padding: 16,
@@ -707,8 +763,22 @@ function StepNotes({ form, setForm }: StepNotesProps) {
 function StepHeader({ title, subtitle, italic }: { title: string; subtitle: string; italic?: boolean }) {
   return (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: '700', color: '#0B1416', marginBottom: 6 }}>{title}</Text>
-      <Text style={{ fontSize: 14, color: '#E36414', fontStyle: italic ? 'italic' : 'normal' }}>{subtitle}</Text>
+      <Text
+        style={{
+          fontFamily: 'InstrumentSerif_400Regular',
+          fontSize: 24,
+          lineHeight: 26,
+          letterSpacing: -0.48,
+          color: '#1A2A30',
+          marginBottom: 2,
+        }}
+      >
+        {title}
+      </Text>
+      {/* Marco's aside is handwritten Caveat in the design, not italic sans. */}
+      <Text style={{ fontFamily: 'Caveat_400Regular', fontSize: 16, color: '#E36414' }}>
+        {subtitle}
+      </Text>
     </View>
   );
 }
@@ -731,39 +801,50 @@ function SelectRow({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: selected ? '#0F4C5C' : '#E5E7EB',
-        backgroundColor: selected ? '#EDF4F6' : '#fff',
-        marginBottom: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        // Selected = 1.8px ink + hard 2x3 offset over white; unselected = a
+        // 1.2px warm hairline. The pale teal fill isn't in the design.
+        borderWidth: selected ? 1.8 : 1.2,
+        borderColor: selected ? '#1A2A30' : '#C7BFB2',
+        backgroundColor: '#FFFFFF',
+        marginBottom: 8,
+        ...(selected
+          ? {
+              shadowColor: '#1A2A30',
+              shadowOffset: { width: 2, height: 3 },
+              shadowOpacity: 1,
+              shadowRadius: 0,
+              elevation: 2,
+            }
+          : null),
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: selected ? '#0F4C5C' : '#E5E7EB',
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: selected ? '#E36414' : '#C7BFB2',
+            borderWidth: 1.2,
+            borderColor: '#1A2A30',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Text style={{ color: selected ? '#fff' : '#6B7280', fontWeight: '700', fontSize: 13 }}>
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 11 }}>
             {label.slice(0, 1).toUpperCase()}
           </Text>
         </View>
         <View>
-          <Text style={{ fontWeight: '600', color: '#0B1416' }}>{label}</Text>
-          {sublabel && <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{sublabel}</Text>}
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A2A30' }}>{label}</Text>
+          {sublabel && <Text style={{ fontSize: 11, color: '#4A5560', marginTop: 1 }}>{sublabel}</Text>}
         </View>
       </View>
       {selected && (
-        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#0F4C5C', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✓</Text>
-        </View>
+        <Text style={{ color: '#0F4C5C', fontSize: 14, fontWeight: '700' }}>✓</Text>
       )}
     </Pressable>
   );

@@ -9,7 +9,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.marco.app"
+      "bundleIdentifier": "com.kolomiiets.marco",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Marco connects to the development server on your local network to load the app and reach the API."
+      }
     },
     "android": {
       "package": "com.marco.app",

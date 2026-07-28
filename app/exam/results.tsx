@@ -19,7 +19,27 @@ const COLORS = {
   orange: '#E36414',
 };
 
-const FONT_MONO = 'ui-monospace';
+// 'ui-monospace' is a CSS generic family that React Native cannot resolve —
+// mono labels were falling back to the system font. Use the loaded face.
+const FONT_MONO = 'JetBrainsMono_400Regular';
+
+// Hard ink offsets from the design: 2x3 on the hero/review cards and CTAs,
+// 1.5x2 on the smaller question-grid tiles.
+const hardShadow = {
+  shadowColor: COLORS.ink,
+  shadowOffset: { width: 2, height: 3 },
+  shadowOpacity: 1,
+  shadowRadius: 0,
+  elevation: 2,
+} as const;
+
+const hardShadowSm = {
+  shadowColor: COLORS.ink,
+  shadowOffset: { width: 1.5, height: 2 },
+  shadowOpacity: 1,
+  shadowRadius: 0,
+  elevation: 1,
+} as const;
 
 export default function ExamResultsScreen() {
   const router = useRouter();
@@ -176,9 +196,10 @@ function ScoreCard({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.cardCream,
-        borderWidth: 1.5,
+        borderWidth: 1.6,
         borderColor: COLORS.ink,
         borderRadius: 16,
+        ...hardShadow,
         padding: 12,
         gap: 12,
       }}
@@ -221,10 +242,11 @@ function ScoreCard({
         {italicLine ? (
           <Text
             style={{
-              fontFamily: 'InstrumentSerif_400Regular_Italic',
-              fontStyle: 'italic',
-              fontSize: 12,
-              color: COLORS.mute,
+              // Marco's aside is handwritten Caveat in the design, not
+              // italic serif.
+              fontFamily: 'Caveat_400Regular',
+              fontSize: 16,
+              color: COLORS.orange,
               marginTop: 1,
             }}
           >
@@ -280,9 +302,8 @@ function CountsRow({ correct, wrong }: { correct: number; wrong: number }) {
       <View style={{ flex: 1, alignItems: 'flex-end' }}>
         <Text
           style={{
-            fontFamily: 'InstrumentSerif_400Regular_Italic',
-            fontStyle: 'italic',
-            fontSize: 12,
+            fontFamily: 'Caveat_400Regular',
+            fontSize: 15,
             color: COLORS.orange,
           }}
         >
@@ -325,11 +346,13 @@ function QuestionGrid({
                 height: 46,
                 borderRadius: 10,
                 backgroundColor: bg,
-                borderWidth: focused ? 2 : 1,
+                borderWidth: focused ? 2 : 1.2,
                 borderColor: COLORS.ink,
                 alignItems: 'center',
                 justifyContent: 'center',
                 paddingVertical: 4,
+                // Focused tile lifts onto the larger offset in the design.
+                ...(focused ? hardShadow : hardShadowSm),
               }}
             >
               <Text
@@ -388,9 +411,10 @@ function ReviewCard({
       style={{
         marginTop: 2,
         backgroundColor: COLORS.cardCream,
-        borderWidth: 1.5,
+        borderWidth: 1.6,
         borderColor: COLORS.ink,
         borderRadius: 16,
+        ...hardShadow,
         padding: 14,
       }}
     >
@@ -500,9 +524,12 @@ function ReviewCard({
             marginTop: 12,
             height: 39,
             borderRadius: 14,
-            borderWidth: 1.5,
+            borderWidth: 1.6,
             borderColor: COLORS.ink,
-            backgroundColor: 'transparent',
+            // Opaque page colour rather than transparent: RN derives the
+            // shadow from the opaque region, so a clear fill casts nothing.
+            backgroundColor: COLORS.bg,
+            ...hardShadowSm,
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -616,9 +643,10 @@ function FooterCTA({ passed, onPress }: { passed: boolean; onPress: () => void }
         style={{
           height: 53,
           borderRadius: 14,
-          borderWidth: 1.5,
+          borderWidth: 1.6,
           borderColor: COLORS.ink,
           backgroundColor: COLORS.teal,
+          ...hardShadow,
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -700,9 +728,10 @@ function ResultsEmpty({
             paddingHorizontal: 18,
             height: 53,
             borderRadius: 14,
-            borderWidth: 1.5,
+            borderWidth: 1.6,
             borderColor: COLORS.ink,
             backgroundColor: COLORS.orange,
+            ...hardShadow,
             alignItems: 'center',
             justifyContent: 'center',
           }}

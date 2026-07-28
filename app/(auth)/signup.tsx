@@ -1,40 +1,71 @@
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { emailSignUp } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
+import { SketchyButton } from '@/components/ui/SketchyButton';
+import { Field } from '@/components/ui/Field';
+import { colors } from '@/constants/colors';
 
-type Strength = 'weak' | 'good' | 'strong';
+// The design's StrengthMeter is a 4-segment scale (weak/fair/good/strong),
+// so the previous 3-level scale gains a "fair" step. The gate for submitting
+// is unchanged: anything above "weak" passes.
+type Strength = 'weak' | 'fair' | 'good' | 'strong';
+
+const STRENGTH_ORDER: Strength[] = ['weak', 'fair', 'good', 'strong'];
+
+// Segment colors straight from the prototype: two clay-ish warnings, then teal.
+const STRENGTH_COLOR: Record<Strength, string> = {
+  weak: '#C44A14',
+  fair: '#D97844',
+  good: colors.teal,
+  strong: colors.teal,
+};
 
 function getStrength(p: string): Strength | null {
   if (p.length === 0) return null;
   const hasDigit = /\d/.test(p);
   if (p.length < 8 || !hasDigit) return 'weak';
-  if (p.length >= 12) return 'strong';
-  return 'good';
+  if (p.length < 10) return 'fair';
+  if (p.length < 12) return 'good';
+  return 'strong';
 }
 
-const STRENGTH_COLOR: Record<Strength, string> = {
-  weak: '#DC2626',
-  good: '#E36414',
-  strong: '#0F4C5C',
-};
+function StrengthMeter({ strength }: { strength: Strength }) {
+  const score = STRENGTH_ORDER.indexOf(strength);
+  const color = STRENGTH_COLOR[strength];
 
-const STRENGTH_LABEL: Record<Strength, string> = {
-  weak: 'weak',
-  good: 'good',
-  strong: 'strong',
-};
+  return (
+    <View style={styles.meter}>
+      <View style={styles.meterTrack}>
+        {STRENGTH_ORDER.map((_, i) => (
+          <View
+            key={i}
+            style={{
+              flex: 1,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: i <= score ? color : 'rgba(26,42,48,0.12)',
+            }}
+          />
+        ))}
+      </View>
+      <View style={styles.meterFooter}>
+        <Text style={styles.meterHint}>at least 8 chars · 1 number</Text>
+        <Text style={[styles.meterLabel, { color }]}>{strength}</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -88,7 +119,7 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -99,188 +130,92 @@ export default function SignUpScreen() {
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          style={{ position: 'absolute', top: 8, left: 16, padding: 8, zIndex: 1 }}
+          style={styles.back}
         >
-          <Text style={{ fontSize: 28, color: '#1a2a30' }}>‹</Text>
+          <Text style={styles.backChevron}>‹</Text>
+          <Text style={styles.backLabel}>Back</Text>
         </Pressable>
 
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 48 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Title */}
-          <Text
-            style={{
-              fontFamily: 'InstrumentSerif_400Regular',
-              fontSize: 36,
-              color: '#1a2a30',
-              marginBottom: 8,
-            }}
-          >
-            Create your account
-          </Text>
-          <Text style={{ fontSize: 14, color: '#4A5560', marginBottom: 36 }}>
-            Three lines and we&apos;re in. Use a name you&apos;d want on a trophy.
-          </Text>
-
-          {/* Name field */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              value={name}
-              onChangeText={(v) => { setName(v); setNameError(null); }}
-              textContentType="name"
-              placeholder="Aleksandra"
-              placeholderTextColor="#ABABAB"
-              style={[styles.input, nameError ? styles.inputError : null]}
-            />
-            {nameError ? (
-              <Text style={[styles.fieldError, { marginTop: 6 }]}>{nameError}</Text>
-            ) : null}
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          {/* Marco lockup — avatar beside a handwritten greeting */}
+          <View style={styles.lockup}>
+            <MarcoAvatar size={42} />
+            <Text style={styles.lockupLine}>
+              Three lines and we&apos;re in. Use a name{'\n'}you&apos;d want on a trophy.
+            </Text>
           </View>
 
-          {/* Email field */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
+          <Text style={styles.heading}>Create your account</Text>
+
+          <View style={styles.form}>
+            <Field
+              label="Name"
+              value={name}
+              onChangeText={(v) => {
+                setName(v);
+                setNameError(null);
+              }}
+              error={nameError}
+              autoCapitalize="words"
+              textContentType="name"
+              placeholder="Your name"
+            />
+
+            <Field
+              label="Email"
+              mono
               value={email}
-              onChangeText={(v) => { setEmail(v); setEmailError(null); }}
+              onChangeText={(v) => {
+                setEmail(v);
+                setEmailError(null);
+              }}
+              error={emailError}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
               textContentType="emailAddress"
               placeholder="you@example.com"
-              placeholderTextColor="#ABABAB"
-              style={[styles.input, emailError ? styles.inputError : null]}
             />
-            {emailError ? (
-              <Text style={[styles.fieldError, { marginTop: 6 }]}>{emailError}</Text>
-            ) : null}
-          </View>
 
-          {/* Password field */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={styles.label}>Password</Text>
-            <View style={{ position: 'relative' }}>
-              <TextInput
-                value={password}
-                onChangeText={(v) => { setPassword(v); setPasswordError(null); }}
-                secureTextEntry={!showPassword}
-                textContentType="newPassword"
-                placeholder="••••••••"
-                placeholderTextColor="#ABABAB"
-                style={[
-                  styles.input,
-                  { paddingRight: 52 },
-                  passwordError ? styles.inputError : null,
-                ]}
-              />
-              <Pressable
-                onPress={() => setShowPassword((v) => !v)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                style={{
-                  position: 'absolute',
-                  right: 16,
-                  top: 0,
-                  bottom: 0,
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 13, color: '#4A5560', fontWeight: '500' }}>
-                  {showPassword ? 'Hide' : 'Show'}
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Strength meter */}
-            {strength !== null ? (
-              <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
-                  {(['weak', 'good', 'strong'] as Strength[]).map((level) => {
-                    const levels: Strength[] = ['weak', 'good', 'strong'];
-                    const active = levels.indexOf(strength) >= levels.indexOf(level);
-                    return (
-                      <View
-                        key={level}
-                        style={{
-                          flex: 1,
-                          height: 3,
-                          borderRadius: 2,
-                          backgroundColor: active
-                            ? STRENGTH_COLOR[strength]
-                            : 'rgba(26, 42, 48, 0.1)',
-                        }}
-                      />
-                    );
-                  })}
-                </View>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: STRENGTH_COLOR[strength],
-                    minWidth: 40,
-                    textAlign: 'right',
-                  }}
-                >
-                  {STRENGTH_LABEL[strength]}
-                </Text>
-              </View>
-            ) : null}
-
-            {passwordError ? (
-              <Text style={[styles.fieldError, { marginTop: 6 }]}>{passwordError}</Text>
-            ) : (
-              <Text style={{ fontSize: 12, color: '#ABABAB', marginTop: 6 }}>
-                at least 8 chars · 1 number
-              </Text>
-            )}
-          </View>
-
-          {/* CTA */}
-          <View style={{ position: 'relative', marginTop: 24, marginBottom: 24, opacity: fieldsValid ? 1 : 0.4 }}>
-            <View
-              style={{
-                position: 'absolute',
-                top: 3,
-                left: 3,
-                right: -3,
-                height: 56,
-                backgroundColor: '#E36414',
-                borderRadius: 14,
+            <Field
+              label="Password"
+              value={password}
+              onChangeText={(v) => {
+                setPassword(v);
+                setPasswordError(null);
               }}
+              error={passwordError}
+              secureTextEntry={!showPassword}
+              textContentType="newPassword"
+              placeholder="••••••••"
+              trailing={
+                <Pressable
+                  onPress={() => setShowPassword((v) => !v)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <Text style={styles.eyeToggle}>{showPassword ? 'Hide' : 'Show'}</Text>
+                </Pressable>
+              }
             />
-            <Pressable
-              disabled={!canSubmit}
-              onPress={() => void handleSignUp()}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#0D3F4E' : '#0F4C5C',
-                borderRadius: 14,
-                height: 56,
-                alignItems: 'center',
-                justifyContent: 'center',
-              })}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-                  Create account
-                </Text>
-              )}
-            </Pressable>
+
+            {strength ? <StrengthMeter strength={strength} /> : null}
           </View>
 
-          {/* Switch to sign in */}
-          <Pressable
-            onPress={() => router.replace('/(auth)/signin')}
-            style={{ alignItems: 'center' }}
-          >
-            <Text style={{ fontSize: 15, color: '#4A5560' }}>
-              Already have an account?{' '}
-              <Text style={{ color: '#0F4C5C', fontWeight: '600' }}>Sign in</Text>
+          <View style={{ flex: 1 }} />
+
+          <SketchyButton
+            label="Create account"
+            variant="primary"
+            disabled={!canSubmit}
+            loading={isLoading}
+            onPress={() => void handleSignUp()}
+          />
+
+          <Pressable onPress={() => router.replace('/(auth)/signin')} style={styles.footer}>
+            <Text style={styles.footerText}>
+              Already have an account? <Text style={styles.footerLink}>Sign in</Text>
             </Text>
           </Pressable>
         </ScrollView>
@@ -290,29 +225,58 @@ export default function SignUpScreen() {
 }
 
 const styles = {
-  label: {
-    fontSize: 11,
-    letterSpacing: 1,
-    color: '#4A5560',
-    marginBottom: 6,
+  safeArea: { flex: 1, backgroundColor: colors.bg },
+  back: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    paddingHorizontal: 24,
+    height: 28,
+  },
+  backChevron: { fontSize: 22, lineHeight: 24, color: colors.inkSoft },
+  backLabel: { fontSize: 14, fontWeight: '500' as const, color: colors.inkSoft },
+  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 28 },
+  lockup: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    marginBottom: 14,
+  },
+  lockupLine: {
+    flex: 1,
+    fontFamily: 'Caveat_400Regular',
+    fontSize: 19,
+    lineHeight: 21,
+    color: colors.clay,
+  },
+  heading: {
+    fontFamily: 'InstrumentSerif_400Regular',
+    fontSize: 30,
+    lineHeight: 32,
+    letterSpacing: -0.6,
+    color: colors.ink,
+  },
+  form: { paddingTop: 22 },
+  eyeToggle: { fontSize: 13, fontWeight: '500' as const, color: colors.inkSoft },
+  meter: { marginTop: -6, marginBottom: 14 },
+  meterTrack: { flexDirection: 'row' as const, gap: 4 },
+  meterFooter: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    marginTop: 6,
+  },
+  meterHint: { fontSize: 11.5, color: colors.inkSoft },
+  meterLabel: {
+    fontSize: 11.5,
     fontWeight: '600' as const,
+    letterSpacing: 1.15,
     textTransform: 'uppercase' as const,
   },
-  input: {
-    height: 52,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(26, 42, 48, 0.15)',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#1a2a30',
-  },
-  inputError: {
-    borderColor: '#DC2626',
-  },
-  fieldError: {
-    fontSize: 13,
-    color: '#DC2626',
+  footer: { alignItems: 'center' as const, paddingTop: 20 },
+  footerText: { fontSize: 13.5, color: colors.inkSoft },
+  footerLink: {
+    color: colors.ink,
+    fontWeight: '600' as const,
+    textDecorationLine: 'underline' as const,
   },
 } as const;
