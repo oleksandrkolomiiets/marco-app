@@ -69,6 +69,20 @@ const FEELING_ALIASES: Record<string, string> = {
   'on-fire': 'on fire',
 };
 
+/**
+ * True only for a real calendar date in YYYY-MM-DD form. A shape regex alone
+ * accepts "2026-13-45", which then walks the whole wizard and fails on save
+ * with the backend's raw "played_on must be YYYY-MM-DD" — so parse it and
+ * require the round-trip to match, rejecting impossible days where they're typed.
+ */
+export function isRealIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return (
+    !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
+  );
+}
+
 export function normalizeFeeling(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const key = raw.trim().toLowerCase();
@@ -150,10 +164,10 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
       // Pre-fill from Marco's match_log token if available; default to manual entry otherwise.
       // played_on must be YYYY-MM-DD before we can skip Step 1 — otherwise the
       // backend rejects on save without the user ever seeing Step 1 to correct it.
-      const isoDateRe = /^\d{4}-\d{2}-\d{2}$/;
-      const validPlayedOn = prefill?.played_on && isoDateRe.test(prefill.played_on)
-        ? prefill.played_on
-        : null;
+      const validPlayedOn =
+        prefill?.played_on && isRealIsoDate(prefill.played_on)
+          ? prefill.played_on
+          : null;
       // Empty / whitespace-only partner names from Marco are treated as absent
       // so the form falls back to manual selection instead of bouncing the user
       // straight into "Someone new" with a blank input.
@@ -251,7 +265,7 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
 
   const canContinue = (): boolean => {
     if (step === 1) {
-      if (useCustomDate) return /^\d{4}-\d{2}-\d{2}$/.test(customDate.trim());
+      if (useCustomDate) return isRealIsoDate(customDate.trim());
       return true;
     }
     return true;
