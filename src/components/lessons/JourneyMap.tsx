@@ -6,6 +6,7 @@ import Svg, {
   Text as SvgText,
 } from 'react-native-svg';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
+import { isLessonCompleted } from '@/hooks/useLessons';
 import { GhostCourt } from './GhostCourt';
 import { LessonNode } from './LessonNode';
 import { MarcoSpeechBubble } from './MarcoSpeechBubble';
@@ -27,9 +28,6 @@ const STAGES: Record<SkillLevel, { name: string; color: string }> = {
   advanced: { name: 'TOURNAMENT', color: '#1a2a30' },
 };
 
-const isCompleted = (l: Lesson) =>
-  l.progress?.status === 'learned' || l.progress?.status === 'mastered';
-
 export const JourneyMap = ({
   lessons,
   onLessonPress,
@@ -46,7 +44,7 @@ export const JourneyMap = ({
   }));
 
   const firstUnfinished = lessons.findIndex(
-    (l) => l.progress === null || l.progress.status === 'viewed',
+    (l) => l.progress === null || l.progress === 'viewed',
   );
   const currentIndex =
     firstUnfinished === -1 ? lessons.length - 1 : firstUnfinished;
@@ -107,7 +105,7 @@ export const JourneyMap = ({
 
   let completedCount = 0;
   const progressNumbers: (number | null)[] = lessons.map((l) => {
-    if (isCompleted(l)) {
+    if (isLessonCompleted(l)) {
       completedCount += 1;
       return completedCount;
     }
@@ -205,7 +203,7 @@ export const JourneyMap = ({
               lesson={lesson}
               x={pos.x}
               y={pos.y}
-              completed={isCompleted(lesson)}
+              completed={isLessonCompleted(lesson)}
               current={i === currentIndex && !lesson.locked}
               locked={lesson.locked && i !== currentIndex}
               labelOnRight={pos.x === LEFT_X}

@@ -14,7 +14,7 @@ import {
   stickerShadowSm,
 } from '@/components/preparation/theme';
 import { useUser } from '@/hooks/useUser';
-import { useLessons } from '@/hooks/useLessons';
+import { isLessonCompleted, useLessons } from '@/hooks/useLessons';
 import { useLatestExamAttempt } from '@/hooks/useExam';
 import { useMatchPreparation, useTogglePreparationDrill } from '@/hooks/usePreparation';
 import type { Lesson, MatchPreparation } from '@/types/api';
@@ -125,7 +125,7 @@ const pickUpcomingPreparation = (
 const getContinueLesson = (lessons: Lesson[] | undefined): Lesson | null => {
   if (!lessons || lessons.length === 0) return null;
   const next = lessons.find(
-    (l) => !l.locked && (l.progress === null || l.progress.status === 'viewed'),
+    (l) => !l.locked && (l.progress === null || l.progress === 'viewed'),
   );
   return next ?? lessons[0] ?? null;
 };
@@ -154,7 +154,7 @@ export default function HomeScreen() {
   const initial = (displayName[0] ?? '?').toUpperCase();
 
   const continueLesson = getContinueLesson(lessons);
-  const completedCount = lessons?.filter((l) => l.progress !== null).length ?? 0;
+  const completedCount = lessons?.filter(isLessonCompleted).length ?? 0;
   const totalCount = lessons?.length ?? 0;
 
   const lessonQuote = continueLesson?.tagline

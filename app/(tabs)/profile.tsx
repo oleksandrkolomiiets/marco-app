@@ -114,9 +114,9 @@ export default function ProfileScreen() {
   const isLoading =
     isUserLoading || areLessonsLoading || areMatchesLoading || areAchievementsLoading || !user;
 
-  const mastered = lessons.filter((l) => l.progress?.status === 'mastered').length;
+  const mastered = lessons.filter((l) => l.progress === 'mastered').length;
   const learned = lessons.filter(
-    (l) => l.progress?.status === 'learned' || l.progress?.status === 'mastered',
+    (l) => l.progress === 'learned' || l.progress === 'mastered',
   ).length;
   const total = lessons.length;
   const masteryRate = total > 0 ? Math.round((mastered / total) * 100) : 0;

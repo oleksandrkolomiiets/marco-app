@@ -7,11 +7,8 @@ import { LockedBottomSheet } from '@/components/lessons/LockedBottomSheet';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
-import { useLessons } from '@/hooks/useLessons';
+import { isLessonCompleted, useLessons } from '@/hooks/useLessons';
 import type { Lesson } from '@/types/api';
-
-const isCompleted = (l: Lesson) =>
-  l.progress?.status === 'learned' || l.progress?.status === 'mastered';
 
 export default function LessonsScreen() {
   const router = useRouter();
@@ -26,7 +23,7 @@ export default function LessonsScreen() {
       })
     : [];
 
-  const completed = lessons.filter(isCompleted).length;
+  const completed = lessons.filter(isLessonCompleted).length;
   const total = lessons.length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 

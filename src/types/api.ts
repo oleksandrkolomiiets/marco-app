@@ -42,6 +42,7 @@ export type LessonDrill = {
 
 export type ProgressStatus = 'viewed' | 'learned' | 'mastered';
 
+/** Response shape of PATCH /api/v1/lessons/:slug/progress. */
 export type LessonProgress = {
   status: ProgressStatus;
   updated_at: string;
@@ -64,7 +65,12 @@ export type Lesson = {
   drill: LessonDrill | null;
   is_free: boolean;
   locked: boolean;
-  progress: LessonProgress | null;
+  // The lesson list and detail endpoints serialise progress as a bare status
+  // string ("viewed"), NOT as an object — only PATCH .../progress returns the
+  // full LessonProgress. Typing this as an object made every
+  // `progress?.status` read undefined, silently zeroing the journey counter,
+  // the mastery stats and the mark-as selection.
+  progress: ProgressStatus | null;
 };
 
 export type GoogleAuthResponse = {

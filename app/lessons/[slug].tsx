@@ -68,7 +68,7 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
     return () => clearTimeout(t);
   }, [errorVisible]);
 
-  const currentStatus = lesson.progress?.status ?? null;
+  const currentStatus = lesson.progress ?? null;
 
   const onMarkAs = (status: ProgressStatus) => {
     setPendingStatus(status);
