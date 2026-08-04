@@ -49,24 +49,34 @@ export function DashedBox({
     >
       {children}
       {size.width > 0 && size.height > 0 ? (
-        <Svg
-          width={size.width}
-          height={size.height}
-          style={{ position: 'absolute', left: 0, top: 0 }}
+        // The outline spans the whole box and paints after the children, so it
+        // covers anything interactive inside. pointerEvents on the Svg alone is
+        // not enough — react-native-svg still takes the touch, which left a
+        // Pressable inside a DashedBox completely untappable. A plain View does
+        // honour pointerEvents="none", so wrap the overlay in one.
+        <View
           pointerEvents="none"
+          style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}
         >
-          <Rect
-            x={strokeWidth / 2}
-            y={strokeWidth / 2}
-            width={Math.max(0, size.width - strokeWidth)}
-            height={Math.max(0, size.height - strokeWidth)}
-            rx={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={strokeWidth}
-            strokeDasharray={dash.join(' ')}
-          />
-        </Svg>
+          <Svg
+            width={size.width}
+            height={size.height}
+            style={{ position: 'absolute', left: 0, top: 0 }}
+            pointerEvents="none"
+          >
+            <Rect
+              x={strokeWidth / 2}
+              y={strokeWidth / 2}
+              width={Math.max(0, size.width - strokeWidth)}
+              height={Math.max(0, size.height - strokeWidth)}
+              rx={radius}
+              fill="none"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={dash.join(' ')}
+            />
+          </Svg>
+        </View>
       ) : null}
     </View>
   );
