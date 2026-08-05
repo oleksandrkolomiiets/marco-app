@@ -122,6 +122,19 @@ const pickUpcomingPreparation = (
   return upcoming[0] ?? null;
 };
 
+// Preps whose slot has passed but that were never marked played. They drop off
+// the card (it only shows what's next) so the empty state has to account for
+// them — otherwise a user with four of these is told nothing is on the calendar.
+const countUnplayedPastPreparations = (
+  items: MatchPreparation[] | undefined,
+): number => {
+  if (!items) return 0;
+  const now = Date.now();
+  return items.filter(
+    (r) => r.played_at === null && new Date(r.scheduled_at).getTime() < now,
+  ).length;
+};
+
 const getContinueLesson = (lessons: Lesson[] | undefined): Lesson | null => {
   if (!lessons || lessons.length === 0) return null;
   const next = lessons.find(
@@ -146,6 +159,10 @@ export default function HomeScreen() {
 
   const upcomingPrep = useMemo(
     () => pickUpcomingPreparation(preparationItems),
+    [preparationItems],
+  );
+  const unplayedPastPreps = useMemo(
+    () => countUnplayedPastPreparations(preparationItems),
     [preparationItems],
   );
 
@@ -530,6 +547,7 @@ export default function HomeScreen() {
             {/* Match preparation */}
             <MatchPreparationCard
               prep={upcomingPrep}
+              unplayedPastPreps={unplayedPastPreps}
               onAdjust={() => upcomingPrep && setAdjustingPrep(upcomingPrep)}
               onPastPreps={() => router.push('/match-preparation')}
             />
@@ -547,15 +565,29 @@ export default function HomeScreen() {
 
 type MatchPreparationCardProps = {
   prep: MatchPreparation | null;
+  unplayedPastPreps: number;
   onAdjust: () => void;
   onPastPreps: () => void;
 };
 
-function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationCardProps) {
+function MatchPreparationCard({
+  prep,
+  unplayedPastPreps,
+  onAdjust,
+  onPastPreps,
+}: MatchPreparationCardProps) {
   // Declared before the empty-state return so the hook order stays stable.
   const toggleDrill = useTogglePreparationDrill();
 
   if (!prep) {
+    const emptyNote =
+      unplayedPastPreps > 0
+        ? unplayedPastPreps === 1
+          ? 'One prep is still waiting on how it went.'
+          : `${unplayedPastPreps} preps are still waiting on how it went.`
+        : 'No prep on the calendar yet.';
+    const emptyAction = unplayedPastPreps > 0 ? 'Review preps ›' : 'Plan a match ›';
+
     return (
       <DashedBox
         radius={16}
@@ -585,7 +617,7 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
             marginBottom: 12,
           }}
         >
-          No prep on the calendar yet.
+          {emptyNote}
         </Text>
         <Pressable
           onPress={onPastPreps}
@@ -598,7 +630,7 @@ function MatchPreparationCard({ prep, onAdjust, onPastPreps }: MatchPreparationC
           }}
         >
           <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
-            Plan a match ›
+            {emptyAction}
           </Text>
         </Pressable>
       </DashedBox>
