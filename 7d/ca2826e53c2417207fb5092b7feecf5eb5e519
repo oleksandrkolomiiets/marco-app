@@ -1,0 +1,27 @@
+src/components/preparation/PreparationSheet.tsx
+  s_a0286b603db96d::t_52ba1e1a9f9b81 247-275
+  s_a0286b603db96d::t_1a1599d7ecef75 982-984
+  s_a0286b603db96d::t_ee78025f684dff 1
+  s_a0286b603db96d::t_5e7cf2554480f0 276-282
+  s_a0286b603db96d::t_ba98f0eb9a59f5 140-146
+  s_a0286b603db96d::t_1dc4b721f34954 177-181
+  s_a0286b603db96d::t_eab497ff15f7f4 199-203
+  s_a0286b603db96d::t_385fabecf4381d 193-194
+  s_a0286b603db96d::t_ebf078c6a82a7e 2,147,149,153,182,195,204,283,463,985
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "7dca2826e53c2417207fb5092b7feecf5eb5e519",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
