@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -136,12 +137,20 @@ export function PreparationSheet({ preparation, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const visible = preparation !== null;
 
+  // SheetBody owns the draft state, so it owns the "is anything unsaved"
+  // question. It publishes its guarded close here so the backdrop tap and the
+  // Android back gesture warn the same way the ✕ does.
+  const guardedClose = useRef<(() => void) | null>(null);
+  const requestClose = useCallback(() => {
+    (guardedClose.current ?? onClose)();
+  }, [onClose]);
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={requestClose}>
       <View style={{ flex: 1 }}>
         <Pressable
           style={[StyleSheet.absoluteFillObject, { backgroundColor: C.scrim }]}
-          onPress={onClose}
+          onPress={requestClose}
         />
         <View
           style={{
@@ -165,7 +174,12 @@ export function PreparationSheet({ preparation, onClose }: Props) {
           </View>
 
           {preparation ? (
-            <SheetBody preparation={preparation} onClose={onClose} bottomInset={insets.bottom} />
+            <SheetBody
+              preparation={preparation}
+              onClose={onClose}
+              guardedCloseRef={guardedClose}
+              bottomInset={insets.bottom}
+            />
           ) : null}
         </View>
       </View>
@@ -176,10 +190,18 @@ export function PreparationSheet({ preparation, onClose }: Props) {
 type SheetBodyProps = {
   preparation: MatchPreparation;
   onClose: () => void;
+  /** Filled with the discard-confirming close so the parent's backdrop and
+   *  back gesture route through it too. */
+  guardedCloseRef: MutableRefObject<(() => void) | null>;
   bottomInset: number;
 };
 
-function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
+function SheetBody({
+  preparation,
+  onClose,
+  guardedCloseRef,
+  bottomInset,
+}: SheetBodyProps) {
   const router = useRouter();
   const replaceDrills = useReplaceDrills();
   const updatePreparation = useUpdateMatchPreparation();
@@ -221,6 +243,43 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
       : 'Upcoming match';
 
   const dateLine = `${formatLongDate(preparation.scheduled_at)} · ${formatTime(preparation.scheduled_at)}${preparation.court ? ` · ${preparation.court}` : ''}`;
+
+  // Nothing in this sheet is written until handleSave runs, so the footer has
+  // to say which of the two it is — and closing has to warn rather than drop
+  // the queue and note edits on the floor.
+  const dirty = useMemo(() => {
+    if ((preparation.note ?? '') !== note) return true;
+    const saved = preparation.drills;
+    if (saved.length !== drills.length) return true;
+    return drills.some(
+      (d, i) =>
+        d.title !== saved[i]!.title ||
+        d.durationSeconds !== saved[i]!.duration_seconds ||
+        d.completed !== saved[i]!.completed,
+    );
+  }, [drills, note, preparation.drills, preparation.note]);
+
+  const closeWithConfirm = useCallback(() => {
+    if (!dirty) {
+      onClose();
+      return;
+    }
+    Alert.alert(
+      'Discard changes?',
+      "Your queue and note edits haven't been saved yet.",
+      [
+        { text: 'Keep editing', style: 'cancel' },
+        { text: 'Discard', style: 'destructive', onPress: onClose },
+      ],
+    );
+  }, [dirty, onClose]);
+
+  useEffect(() => {
+    guardedCloseRef.current = closeWithConfirm;
+    return () => {
+      guardedCloseRef.current = null;
+    };
+  }, [closeWithConfirm, guardedCloseRef]);
 
   const done = drills.filter((d) => d.completed).length;
   const total = drills.length;
@@ -401,7 +460,7 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
               <Text style={{ fontSize: 18, color: C.ink, opacity: 0.75 }}>🗑</Text>
             )}
           </Pressable>
-          <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Close">
+          <Pressable onPress={closeWithConfirm} hitSlop={12} accessibilityLabel="Close">
             <Text style={{ fontSize: 22, color: C.ink }}>✕</Text>
           </Pressable>
         </View>
@@ -920,7 +979,10 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
-              Adjust queue
+              {/* Everything in this sheet is a draft until this button commits
+                  it. "Adjust queue" read like a way into another editor, so a
+                  checked drill or an edited note was easy to lose by closing. */}
+              {dirty ? 'Save changes' : 'Done'}
             </Text>
           )}
         </Pressable>
