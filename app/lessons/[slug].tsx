@@ -83,6 +83,16 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
 
   const quote = lesson.tagline ?? '';
 
+  // Every body section renders null when its field is missing, and five of the
+  // seeded lessons — including the very first one the journey points at — carry
+  // no cues, mistake, focus or drill at all. That came out as a blank void
+  // between the video and the Mark as bar.
+  const hasBody =
+    lesson.cue_points.length > 0 ||
+    Boolean(lesson.common_mistake_text) ||
+    Boolean(lesson.focus) ||
+    lesson.drill !== null;
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: COLORS.bg }}
@@ -102,13 +112,19 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
       >
         <TitleBlock title={lesson.title} quote={quote} />
         <VideoBlock videoUrl={lesson.video_url} />
-        <CuePointsSection cuePoints={lesson.cue_points} />
-        <CommonMistakeCard
-          pct={lesson.common_mistake_pct}
-          text={lesson.common_mistake_text}
-        />
-        <FocusSection focus={lesson.focus} />
-        <DrillCard drill={lesson.drill} />
+        {hasBody ? (
+          <>
+            <CuePointsSection cuePoints={lesson.cue_points} />
+            <CommonMistakeCard
+              pct={lesson.common_mistake_pct}
+              text={lesson.common_mistake_text}
+            />
+            <FocusSection focus={lesson.focus} />
+            <DrillCard drill={lesson.drill} />
+          </>
+        ) : (
+          <EmptyBodyNote />
+        )}
       </ScrollView>
 
       <StickyBottomBar
@@ -505,6 +521,24 @@ function FocusSection({ focus }: { focus: string | null }) {
       <Text style={{ fontSize: 14, lineHeight: 20, color: COLORS.ink }}>
         {focus}
       </Text>
+    </View>
+  );
+}
+
+// Shown when the lesson has no written notes at all — better than the blank
+// stretch that used to sit between the video and the Mark as bar, and it points
+// somewhere useful rather than looking like a failed load.
+function EmptyBodyNote() {
+  return (
+    <View style={{ paddingHorizontal: 20, marginTop: 4, marginBottom: 12 }}>
+      <DashedBox radius={14} style={{ padding: 16 }}>
+        <Text style={{ fontSize: 14, lineHeight: 20, color: COLORS.ink }}>
+          No written notes for this one yet — the clip is the lesson.
+        </Text>
+        <Text style={{ fontSize: 13, lineHeight: 19, color: COLORS.mute, marginTop: 6 }}>
+          Ask Marco about it in chat and he&apos;ll walk you through the detail.
+        </Text>
+      </DashedBox>
     </View>
   );
 }

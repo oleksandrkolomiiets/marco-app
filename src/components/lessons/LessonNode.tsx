@@ -83,7 +83,11 @@ export const LessonNode = ({
             fill="#0F4C5C"
             textAnchor={labelAnchor}
           >
-            {`sm. ${progressNumber}`}
+            {/* progressNumber is "the Nth lesson you finished". The label used
+                to read "sm. 1" — an abbreviation that appears nowhere else in
+                the app and means nothing in its copy; the ordinal convention
+                here is the match log's "#002". */}
+            {`#${progressNumber}`}
           </SvgText>
         ) : null}
         <SvgText

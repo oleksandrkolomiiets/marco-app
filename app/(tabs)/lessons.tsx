@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -14,6 +14,29 @@ export default function LessonsScreen() {
   const router = useRouter();
   const { data, isLoading, error, refetch, isRefetching } = useLessons();
   const [lockedSheetOpen, setLockedSheetOpen] = useState(false);
+
+  // The path is drawn bottom-up: lesson 1 sits at the bottom of a canvas that
+  // is 35 nodes tall, so opening at scroll 0 lands on the last lesson, locked,
+  // thousands of pixels from where the player actually is. Jump to their node
+  // once, and leave the scroll alone after that.
+  const scrollRef = useRef<ScrollView>(null);
+  const didJumpToCurrent = useRef(false);
+  const handleCurrentNodeY = useCallback((y: number) => {
+    if (didJumpToCurrent.current) return;
+    didJumpToCurrent.current = true;
+    setCurrentNodeY(y);
+  }, []);
+  const [currentNodeY, setCurrentNodeY] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (currentNodeY === null) return;
+    // One frame so the ScrollView has measured the canvas it is about to jump
+    // inside of; a jump before that is clamped back to 0.
+    const raf = requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, currentNodeY - 420), animated: false });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [currentNodeY]);
 
   const lessons = data
     ? [...data].sort((a, b) => {
@@ -105,7 +128,11 @@ export default function LessonsScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 40 }}
+          ref={scrollRef}
+          // The path's "you are here / start!" marker hangs below the first
+          // node, and 40 wasn't enough to clear the tab bar — it sat clipped
+          // even scrolled all the way down.
+          contentContainerStyle={{ paddingBottom: 120 }}
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -119,6 +146,7 @@ export default function LessonsScreen() {
               lessons={lessons}
               onLessonPress={handleLessonPress}
               onLockedPress={handleLockedPress}
+              onCurrentNodeY={handleCurrentNodeY}
             />
           ) : null}
         </ScrollView>

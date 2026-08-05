@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import Svg, {
   Circle,
@@ -16,6 +17,9 @@ type JourneyMapProps = {
   lessons: Lesson[];
   onLessonPress: (lesson: Lesson) => void;
   onLockedPress: (lesson: Lesson) => void;
+  /** Reports the y of the node the player is on, so the screen can open there
+   *  instead of at the top — which is lesson 35, thousands of pixels away. */
+  onCurrentNodeY?: (y: number) => void;
 };
 
 const NODE_SPACING = 90;
@@ -32,6 +36,7 @@ export const JourneyMap = ({
   lessons,
   onLessonPress,
   onLockedPress,
+  onCurrentNodeY,
 }: JourneyMapProps) => {
   const { width } = useWindowDimensions();
 
@@ -102,6 +107,11 @@ export const JourneyMap = ({
   const currentLesson = lessons[currentIndex];
   const currentPos = positions[currentIndex];
   const marcoOnRight = currentPos?.x === LEFT_X;
+
+  const currentY = currentPos?.y;
+  useEffect(() => {
+    if (currentY !== undefined) onCurrentNodeY?.(currentY);
+  }, [currentY, onCurrentNodeY]);
 
   let completedCount = 0;
   const progressNumbers: (number | null)[] = lessons.map((l) => {
