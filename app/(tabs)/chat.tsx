@@ -648,13 +648,11 @@ export default function ChatScreen() {
             </View>
           </View>
         </View>
-        <Pressable
-          style={{ padding: 4 }}
-          accessibilityRole="button"
-          accessibilityLabel="Conversation options"
-        >
-          <Text style={{ fontSize: 20, color: '#6B7280' }}>⋯</Text>
-        </Pressable>
+        {/* The "⋯" that used to sit here had no onPress and no menu behind it,
+            while announcing itself to screen readers as "Conversation options".
+            Every action Marco's chat actually has is on the per-message
+            long-press sheet; bring the affordance back when there is something
+            conversation-level to put in it. */}
       </View>
 
       <KeyboardAvoidingView

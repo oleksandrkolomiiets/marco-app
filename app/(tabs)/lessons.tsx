@@ -51,7 +51,6 @@ export default function LessonsScreen() {
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const handleLessonPress = (lesson: Lesson) => {
-    console.log('open lesson', lesson.slug);
     router.push(`/lessons/${lesson.slug}` as never);
   };
 
