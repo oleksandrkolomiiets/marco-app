@@ -12,7 +12,7 @@ import { useLessons } from '@/hooks/useLessons';
 import { computeMatchStats, useMatches } from '@/hooks/useMatches';
 import { useUser } from '@/hooks/useUser';
 import { useAuthStore } from '@/stores/authStore';
-import type { Achievement, CourtSide, SkillLevel, User } from '@/types/api';
+import type { Achievement, CourtSide, Plan, SkillLevel, User } from '@/types/api';
 
 const COLORS = {
   bg: '#FAF8F5',
@@ -52,6 +52,12 @@ const SKILL_LEVEL_LABEL: Record<SkillLevel, string> = {
   beginner: 'Beginner',
   intermediate: 'Intermediate',
   advanced: 'Advanced',
+};
+
+const PLAN_LABEL: Record<Plan, string> = {
+  free: 'Free',
+  premium: 'Premium',
+  coach: 'Coach',
 };
 
 const COURT_SIDE_LABEL: Record<CourtSide, string> = {
@@ -403,8 +409,11 @@ export default function ProfileScreen() {
                 label="Notifications"
                 onPress={() => console.log('Open notifications')}
               />
+              {/* Read the real plan — this was hardcoded to "Premium", so a free
+                  account was told it had a subscription while the rest of the
+                  app correctly locked premium lessons behind an upgrade. */}
               <SettingsRow
-                label="Subscription · Premium"
+                label={`Subscription · ${PLAN_LABEL[user.plan]}`}
                 onPress={() => console.log('Open subscription')}
               />
               <SettingsRow
