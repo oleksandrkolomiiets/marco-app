@@ -16,6 +16,17 @@ export type LessonRef = { id: string; title: string };
 export const LESSON_REF_RE = /\[LESSON_REF:\s*([a-zA-Z0-9_-]+)\s*\|\s*"([^"]+)"\s*\]/g;
 export const MATCH_LOG_RE = /\[MATCH_LOG:\s*\{[^}]+\}\s*\]/g;
 
+// Two or more consecutive blank lines — what a stripped token leaves behind
+// when Marco wrote it on a line of its own. Mirrors the Go side
+// (marco-api internal/marco/lesson_refs.go blankLineRunRegex).
+const BLANK_LINE_RUN_RE = /\n[ \t]*\n(?:[ \t]*\n)+/g;
+
+// Without this the bubble renders a hole where the token used to be. Only
+// vertical runs collapse: the fixtures pin interior horizontal gaps as-is.
+export function collapseBlankLineRuns(text: string): string {
+  return text.replace(BLANK_LINE_RUN_RE, '\n\n');
+}
+
 export function parseLessonRefs(text: string): { clean: string; refs: LessonRef[] } {
   const refs: LessonRef[] = [];
   const clean = text.replace(LESSON_REF_RE, (_match, id: string, title: string) => {
@@ -29,7 +40,10 @@ export function parseLessonRefs(text: string): { clean: string; refs: LessonRef[
 // every token removed, lesson refs extracted for the tappable cards. This is
 // the client counterpart of the server's marco.CleanContent + ParseLessonRefs.
 export function parseFinalMessage(text: string): { clean: string; refs: LessonRef[] } {
-  return parseLessonRefs(stripMatchPrep(text.replace(MATCH_LOG_RE, '')));
+  const { clean, refs } = parseLessonRefs(
+    stripMatchPrep(text.replace(MATCH_LOG_RE, '')),
+  );
+  return { clean: collapseBlankLineRuns(clean).trim(), refs };
 }
 
 // Streaming-friendly: matches the token even if the closing bracket hasn't
@@ -57,9 +71,11 @@ function hideTrailingPartialToken(text: string): string {
 // One-call cleanup for the streaming bubble: complete and in-progress tokens
 // of all three kinds removed, plus any trailing partial keyword.
 export function stripStreamingTokens(text: string): string {
-  return hideTrailingPartialToken(
-    stripMatchPrep(
-      text.replace(MATCH_LOG_STREAMING_RE, '').replace(LESSON_REF_STREAMING_RE, ''),
+  return collapseBlankLineRuns(
+    hideTrailingPartialToken(
+      stripMatchPrep(
+        text.replace(MATCH_LOG_STREAMING_RE, '').replace(LESSON_REF_STREAMING_RE, ''),
+      ),
     ),
   );
 }
