@@ -202,7 +202,10 @@ export default function MatchPreparationScreen() {
             </View>
 
             {filteredUpcoming.length === 0 && filteredPast.length === 0 ? (
-              <EmptyState onCreate={() => setShowCreate(true)} />
+              <EmptyState
+                onCreate={() => setShowCreate(true)}
+                filtered={items.length > 0}
+              />
             ) : null}
           </>
         )}
@@ -574,7 +577,16 @@ const DrillDots = ({ done, total }: { done: number; total: number }) => {
   );
 };
 
-const EmptyState = ({ onCreate }: { onCreate: () => void }) => (
+// `filtered` distinguishes "you have no preps" from "this filter matches none
+// of the preps you do have" — announcing "No preps yet." to someone looking at
+// the Upcoming tab with three past preps behind it is simply false.
+const EmptyState = ({
+  onCreate,
+  filtered,
+}: {
+  onCreate: () => void;
+  filtered: boolean;
+}) => (
   <View
     style={[
       {
@@ -590,7 +602,7 @@ const EmptyState = ({ onCreate }: { onCreate: () => void }) => (
     ]}
   >
     <Text style={{ fontFamily: F.serif, fontSize: 22, color: C.ink, textAlign: 'center' }}>
-      No preps yet.
+      {filtered ? 'Nothing in this view.' : 'No preps yet.'}
     </Text>
     <Text
       style={{
@@ -602,7 +614,9 @@ const EmptyState = ({ onCreate }: { onCreate: () => void }) => (
         marginBottom: 16,
       }}
     >
-      &quot;Build a queue. Grade the result.&quot;
+      {filtered
+        ? 'Try another filter — or plan the next one.'
+        : '"Build a queue. Grade the result."'}
     </Text>
     <Pressable
       onPress={onCreate}

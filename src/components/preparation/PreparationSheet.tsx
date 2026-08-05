@@ -816,7 +816,10 @@ function SheetBody({ preparation, onClose, bottomInset }: SheetBodyProps) {
             onChangeText={(text) => {
               if (text.length <= NOTE_MAX) setNote(text);
             }}
-            placeholder="Right knee a bit stiff — go easy on the lateral drills."
+            // A finished sentence about the user's knee, set in the same
+            // handwriting as a saved note, reads as saved data — the match-log
+            // note asks a question instead, so this one does too.
+            placeholder="Anything Marco should know before this one?"
             placeholderTextColor={C.mute}
             multiline
             style={{
