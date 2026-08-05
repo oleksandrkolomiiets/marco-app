@@ -1,0 +1,21 @@
+app/(tabs)/profile.tsx
+  s_a0286b603db96d::t_5f5ce9e1ca562d 412-414,416
+  s_a0286b603db96d::t_94984e0e2838de 15
+  s_a0286b603db96d::t_5b1a7f7b7164c4 57-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "191a7686b0df4805bc26cd8aabe6feb46cd1f511",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
