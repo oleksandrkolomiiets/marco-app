@@ -1,0 +1,32 @@
+src/components/lessons/JourneyMap.tsx
+  s_a0286b603db96d::t_bcf98c0f43637a 1
+  s_a0286b603db96d::t_6b8484701c0e8f 20-22
+  s_a0286b603db96d::t_a9344e9fa3df90 111-115
+  s_a0286b603db96d::t_f0ed32f64af546 39
+app/(tabs)/lessons.tsx
+  s_a0286b603db96d::t_21774241187426 132-135
+  s_a0286b603db96d::t_843414dbf69d83 131
+  s_a0286b603db96d::t_b203d73534f8ad 1,18-40,149
+src/components/lessons/LessonNode.tsx
+  s_a0286b603db96d::t_86d10fa893c89a 86-90
+app/lessons/[slug].tsx
+  s_a0286b603db96d::t_d47ec03327ec3f 528-545
+  s_a0286b603db96d::t_de050b756c5a63 86-95
+  s_a0286b603db96d::t_830ba28f4e53bc 115-127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "626ec70fdb31d8929a00e0165ba10b3ecf221d4f",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
