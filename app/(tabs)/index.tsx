@@ -383,23 +383,28 @@ export default function HomeScreen() {
                   </Text>
                 </View>
 
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 10,
-                    right: 10,
-                    backgroundColor: '#E36414',
-                    borderRadius: 4,
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                  }}
-                >
-                  <Text
-                    style={{ fontSize: 10, fontWeight: '700', color: '#FFFFFF' }}
+                {/* Only new if the player has genuinely never opened it — the
+                    badge used to be unconditional, so a lesson you'd already
+                    viewed still announced itself as NEW. */}
+                {continueLesson?.progress == null ? (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      backgroundColor: '#E36414',
+                      borderRadius: 4,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                    }}
                   >
-                    NEW
-                  </Text>
-                </View>
+                    <Text
+                      style={{ fontSize: 10, fontWeight: '700', color: '#FFFFFF' }}
+                    >
+                      NEW
+                    </Text>
+                  </View>
+                ) : null}
 
                 <View
                   style={{
@@ -509,7 +514,11 @@ export default function HomeScreen() {
                     marginTop: 2,
                   }}
                 >
-                  2 unread
+                  {/* Was a hardcoded "2 unread" — every user saw it forever, and
+                      there is no read/unread tracking anywhere to derive it
+                      from (no read_at on messages). Its two neighbours show
+                      real counts, so this one shouldn't invent one. */}
+                  ask anything
                 </Text>
               </Pressable>
 
