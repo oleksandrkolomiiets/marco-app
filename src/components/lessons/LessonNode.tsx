@@ -1,4 +1,4 @@
-import { Circle, G, Text as SvgText } from 'react-native-svg';
+import { Circle, G, TSpan, Text as SvgText } from 'react-native-svg';
 import type { Lesson } from '@/types/api';
 
 type LessonNodeProps = {
@@ -14,6 +14,26 @@ type LessonNodeProps = {
 
 const LABEL_OFFSET = 30;
 
+// SVG text does not wrap, and the label is anchored toward the screen edge, so a
+// long title simply ran off the canvas: "Your Side of the Court — Individual
+// Movement Zones" (50 chars) rendered as "e of the Court — Individual Movement
+// Zones", its start clipped away. Budget is sized for the tighter case — a
+// right-hand node labelled leftwards on a 402pt screen.
+const MAX_LABEL_CHARS = 30;
+const LABEL_LINE_HEIGHT = 15;
+
+function labelLines(title: string): string[] {
+  if (title.length <= MAX_LABEL_CHARS) return [title];
+  const cut = title.lastIndexOf(' ', MAX_LABEL_CHARS);
+  const head = cut > 0 ? title.slice(0, cut) : title.slice(0, MAX_LABEL_CHARS);
+  const rest = title.slice(head.length).trim();
+  const tail =
+    rest.length <= MAX_LABEL_CHARS
+      ? rest
+      : `${rest.slice(0, MAX_LABEL_CHARS - 1).trimEnd()}…`;
+  return [head, tail];
+}
+
 export const LessonNode = ({
   lesson,
   x,
@@ -26,6 +46,15 @@ export const LessonNode = ({
 }: LessonNodeProps) => {
   const labelX = labelOnRight ? x + LABEL_OFFSET : x - LABEL_OFFSET;
   const labelAnchor: 'start' | 'end' = labelOnRight ? 'start' : 'end';
+  const lines = labelLines(lesson.title);
+  // Lift a wrapped label so the two lines straddle the node instead of hanging
+  // below it.
+  const labelLift = lines.length > 1 ? LABEL_LINE_HEIGHT / 2 : 0;
+  const titleSpans = lines.map((line, i) => (
+    <TSpan key={`${i}-${line}`} x={labelX} dy={i === 0 ? 0 : LABEL_LINE_HEIGHT}>
+      {line}
+    </TSpan>
+  ));
 
   if (current) {
     return (
@@ -92,13 +121,13 @@ export const LessonNode = ({
         ) : null}
         <SvgText
           x={labelX}
-          y={y + 10}
+          y={y + 10 - labelLift}
           fontSize={13}
           fill="#0F4C5C"
           fontWeight="600"
           textAnchor={labelAnchor}
         >
-          {lesson.title}
+          {titleSpans}
         </SvgText>
       </G>
     );
@@ -127,12 +156,12 @@ export const LessonNode = ({
         </SvgText>
         <SvgText
           x={labelX}
-          y={y + 4}
+          y={y + 4 - labelLift}
           fontSize={12}
           fill="#9CA3AF"
           textAnchor={labelAnchor}
         >
-          {lesson.title}
+          {titleSpans}
         </SvgText>
       </G>
     );
@@ -159,13 +188,13 @@ export const LessonNode = ({
       </SvgText>
       <SvgText
         x={labelX}
-        y={y + 4}
+        y={y + 4 - labelLift}
         fontSize={13}
         fill="#1A1A1A"
         fontWeight="600"
         textAnchor={labelAnchor}
       >
-        {lesson.title}
+        {titleSpans}
       </SvgText>
     </G>
   );
