@@ -1,0 +1,23 @@
+src/components/chat/MatchLogForm.tsx
+  s_a0286b603db96d::t_68a3d30b712066 542-549,551-554
+  s_a0286b603db96d::t_a7a5e6074a1604 497
+app/(tabs)/index.tsx
+  s_a0286b603db96d::t_3ee000ddb24394 153-157,166-168
+  s_a0286b603db96d::t_867d0a5c25b465 169,557,566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "b436e85eff53ff6fe1dd5a1cfa2db607c130b0f1",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
