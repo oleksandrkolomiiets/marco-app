@@ -302,21 +302,36 @@ const defaultDate = (() => {
   return `${yyyy}-${mm}-${dd}`;
 })();
 
-function combineDateTime(date: string, time: string): string | null {
+// `scheduled_at` is wall-clock-in-UTC everywhere else: prompt.md has Marco put
+// the time the player stated straight into a UTC timestamp, and every formatter
+// reads it back with getUTC*. Building this with the local-time Date constructor
+// shifted the entered time by the UTC offset instead — 20:00 typed in CEST was
+// stored as 18:00Z and then displayed as 18:00 — and close to midnight it moved
+// the date as well. Build it in UTC so the player sees what they typed.
+//
+// Date.UTC also normalises overflow (month 13 rolls into the next year, 31 April
+// into May), so range-check the parts and confirm the round-trip rather than
+// silently accepting an impossible date as a different valid one.
+export function combineDateTime(date: string, time: string): string | null {
   const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
   const timeMatch = /^(\d{2}):(\d{2})$/.exec(time.trim());
   if (!dateMatch || !timeMatch) return null;
   const [, y, mo, d] = dateMatch;
   const [, hh, mm] = timeMatch;
-  const dt = new Date(
-    Number(y),
-    Number(mo) - 1,
-    Number(d),
-    Number(hh),
-    Number(mm),
-    0,
-    0,
-  );
+  const year = Number(y);
+  const month = Number(mo);
+  const day = Number(d);
+  const hour = Number(hh);
+  const minute = Number(mm);
+  if (month < 1 || month > 12 || day < 1 || hour > 23 || minute > 59) return null;
+  const dt = new Date(Date.UTC(year, month - 1, day, hour, minute, 0, 0));
   if (Number.isNaN(dt.getTime())) return null;
+  if (
+    dt.getUTCFullYear() !== year ||
+    dt.getUTCMonth() !== month - 1 ||
+    dt.getUTCDate() !== day
+  ) {
+    return null;
+  }
   return dt.toISOString();
 }
