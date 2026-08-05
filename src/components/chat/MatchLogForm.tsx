@@ -494,6 +494,7 @@ function StepWhen({ form, setForm, customDate, setCustomDate, useCustomDate, set
     { label: 'Today', value: today },
     { label: 'Yesterday', value: yesterday },
   ];
+  const customDateValid = isRealIsoDate(customDate.trim());
 
   return (
     <View>
@@ -538,8 +539,19 @@ function StepWhen({ form, setForm, customDate, setCustomDate, useCustomDate, set
               autoFocus
             />
           )}
+          {/* Continue is disabled until the date is real, and "2026-02-31"
+              looks perfectly fine — without this the button just sits dead with
+              no reason given. */}
+          {useCustomDate && customDate.trim().length > 0 && !customDateValid && (
+            <Text style={{ marginTop: 4, fontSize: 12, color: '#B4451F' }}>
+              Not a real date — use YYYY-MM-DD.
+            </Text>
+          )}
         </View>
-        {useCustomDate && (
+        {/* Only tick when the date can actually be used; a ✓ next to an empty
+            or impossible date is the form telling the user it's happy when the
+            footer says otherwise. */}
+        {useCustomDate && customDateValid && (
           <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#0F4C5C', alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✓</Text>
           </View>

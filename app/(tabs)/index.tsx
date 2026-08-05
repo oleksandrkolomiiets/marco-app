@@ -150,9 +150,11 @@ export default function HomeScreen() {
   const { data: lessons, isLoading: lessonsLoading } = useLessons();
   const { data: examAttempt } = useLatestExamAttempt();
   const { data: preparationItems } = useMatchPreparation();
-  const [adjustingPrep, setAdjustingPrep] = useState<MatchPreparation | null>(
-    null,
-  );
+  // Hold the id, not the row. Handing the sheet a snapshot froze it: marking the
+  // prep Played wrote played_at and refetched, but the sheet kept rendering the
+  // object captured when it opened, so its status pill still said "Upcoming".
+  // match-preparation.tsx already looks its row up this way.
+  const [adjustingPrepId, setAdjustingPrepId] = useState<string | null>(null);
 
   const now = new Date();
   const isLoading = userLoading || lessonsLoading;
@@ -160,6 +162,10 @@ export default function HomeScreen() {
   const upcomingPrep = useMemo(
     () => pickUpcomingPreparation(preparationItems),
     [preparationItems],
+  );
+  const adjustingPrep = useMemo(
+    () => preparationItems?.find((r) => r.id === adjustingPrepId) ?? null,
+    [preparationItems, adjustingPrepId],
   );
   const unplayedPastPreps = useMemo(
     () => countUnplayedPastPreparations(preparationItems),
@@ -548,7 +554,7 @@ export default function HomeScreen() {
             <MatchPreparationCard
               prep={upcomingPrep}
               unplayedPastPreps={unplayedPastPreps}
-              onAdjust={() => upcomingPrep && setAdjustingPrep(upcomingPrep)}
+              onAdjust={() => upcomingPrep && setAdjustingPrepId(upcomingPrep.id)}
               onPastPreps={() => router.push('/match-preparation')}
             />
           </>
@@ -557,7 +563,7 @@ export default function HomeScreen() {
 
       <PreparationSheet
         preparation={adjustingPrep}
-        onClose={() => setAdjustingPrep(null)}
+        onClose={() => setAdjustingPrepId(null)}
       />
     </SafeAreaView>
   );
