@@ -7,10 +7,12 @@ describe('stripStreamingTokens', () => {
     );
   });
 
-  it('strips a complete LESSON_REF token mid-message', () => {
+  it('resolves a complete LESSON_REF token to its title mid-message', () => {
+    // Matches what parseFinalMessage will render, so the sentence does not
+    // change shape when the stream ends.
     expect(
       stripStreamingTokens('Try [LESSON_REF: bdj_001 | "Bandeja basics"] tonight.'),
-    ).toBe('Try  tonight.');
+    ).toBe('Try Bandeja basics tonight.');
   });
 
   it('strips a complete MATCH_LOG token', () => {
@@ -27,16 +29,20 @@ describe('stripStreamingTokens', () => {
 
   // The reported glitch: while the keyword itself is streaming in
   // ("[LESS", "[LESSON_R", …) nothing matched and the raw text flashed.
-  // Every prefix of every token form must be invisible.
-  it.each(['[LESSON_REF: bdj_001 | "Bandeja basics"]', '[MATCH_LOG: {"result":"won"}]', '[MATCH_PREP: {"mode":"adjust","id":"x"}]'])(
-    'hides every streaming prefix of %s',
-    (token) => {
-      for (let i = 1; i <= token.length; i++) {
-        const out = stripStreamingTokens(`Try this. ${token.slice(0, i)}`);
-        expect(out).toBe('Try this. ');
-      }
-    },
-  );
+  // Every *partial* prefix of every token form must be invisible. The complete
+  // token is not a partial: a lesson ref resolves to its title there, the
+  // others to nothing — which is what the finalised message renders too.
+  it.each([
+    ['[LESSON_REF: bdj_001 | "Bandeja basics"]', 'Try this. Bandeja basics'],
+    ['[MATCH_LOG: {"result":"won"}]', 'Try this. '],
+    ['[MATCH_PREP: {"mode":"adjust","id":"x"}]', 'Try this. '],
+  ])('hides every partial streaming prefix of %s', (token, whenComplete) => {
+    for (let i = 1; i < token.length; i++) {
+      const out = stripStreamingTokens(`Try this. ${token.slice(0, i)}`);
+      expect(out).toBe('Try this. ');
+    }
+    expect(stripStreamingTokens(`Try this. ${token}`)).toBe(whenComplete);
+  });
 
   it('keeps a legit bracket once it diverges from every token keyword', () => {
     // "[Ma" diverges from "[MATCH_…" (case-sensitive) and must reappear.

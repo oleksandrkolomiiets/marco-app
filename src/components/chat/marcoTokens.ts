@@ -29,9 +29,13 @@ export function collapseBlankLineRuns(text: string): string {
 
 export function parseLessonRefs(text: string): { clean: string; refs: LessonRef[] } {
   const refs: LessonRef[] = [];
+  // The title replaces the token rather than being deleted with it: Marco
+  // writes the reference inline, so removing it left sentences like "the
+  // foundations of net play: . That gives you…" with a hole where the subject
+  // should be. The tappable card comes from `refs` and renders separately.
   const clean = text.replace(LESSON_REF_RE, (_match, id: string, title: string) => {
     refs.push({ id: id.trim(), title: title.trim() });
-    return '';
+    return title.trim();
   }).trim();
   return { clean, refs };
 }
@@ -74,7 +78,14 @@ export function stripStreamingTokens(text: string): string {
   return collapseBlankLineRuns(
     hideTrailingPartialToken(
       stripMatchPrep(
-        text.replace(MATCH_LOG_STREAMING_RE, '').replace(LESSON_REF_STREAMING_RE, ''),
+        text
+          .replace(MATCH_LOG_STREAMING_RE, '')
+          // A lesson ref that has fully arrived resolves to its title here, the
+          // same as it will when the message finalises — otherwise the sentence
+          // streams in with a hole and grows a title the moment the stream ends.
+          .replace(LESSON_REF_RE, (_m, _id: string, title: string) => title.trim())
+          // Whatever is left is a token still arriving; hide it until it does.
+          .replace(LESSON_REF_STREAMING_RE, ''),
       ),
     ),
   );

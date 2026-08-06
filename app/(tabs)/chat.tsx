@@ -23,7 +23,7 @@ import { LockedBottomSheet } from '@/components/lessons/LockedBottomSheet';
 import { PreparationSheet } from '@/components/preparation/PreparationSheet';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
-import { matchesQueryKey } from '@/hooks/useMatches';
+import { matchesQueryKey, useMatches } from '@/hooks/useMatches';
 import {
   preparationQueryKey,
   useCreateMatchPreparation,
@@ -50,12 +50,17 @@ type LocalMessage = ChatMessage & {
   feedbackScore?: 1 | -1;
 };
 
-const SEED_MESSAGE: LocalMessage = {
+// The opener shown above an empty conversation. Asking a player who has never
+// logged a match what "felt off" in their last one is the first thing a new
+// account sees, so the greeting picks a line the user can actually answer.
+const seedMessage = (hasLoggedMatch: boolean): LocalMessage => ({
   id: 'seed-1',
   role: 'assistant',
-  content: "Ciao! I'm Marco. Tell me about your last match — what felt off?",
+  content: hasLoggedMatch
+    ? "Ciao! I'm Marco. Tell me about your last match — what felt off?"
+    : "Ciao! I'm Marco, your coach. Ask me anything about your game — or tell me about a match and I'll log it for you.",
   created_at: new Date(0).toISOString(),
-};
+});
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -137,6 +142,8 @@ export default function ChatScreen() {
   const [appliedAdjustMessageIds, setAppliedAdjustMessageIds] = useState<Set<string>>(new Set());
   const [lockedSheetOpen, setLockedSheetOpen] = useState(false);
   const { data: preparationList = [] } = useMatchPreparation();
+  const { data: matchLogs = [] } = useMatches();
+  const hasLoggedMatch = matchLogs.length > 0;
   const createPreparation = useCreateMatchPreparation();
   const updatePreparation = useUpdateMatchPreparation();
   const replaceDrills = useReplaceDrills();
@@ -600,11 +607,11 @@ export default function ChatScreen() {
           </View>
         )}
         {initialLoadDone && !hasMore && (
-          <MessageBubble message={SEED_MESSAGE} showAvatar />
+          <MessageBubble message={seedMessage(hasLoggedMatch)} showAvatar />
         )}
       </View>
     );
-  }, [isLoadingOlder, hasMore, initialLoadDone]);
+  }, [isLoadingOlder, hasMore, initialLoadDone, hasLoggedMatch]);
 
   const keyExtractor = useCallback((item: LocalMessage) => item.id, []);
 
