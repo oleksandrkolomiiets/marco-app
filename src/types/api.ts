@@ -310,3 +310,15 @@ export type AchievementSummary = {
   total: number;
   achievements: Achievement[];
 };
+
+/** One signed-in device, from GET /api/v1/devices. */
+export type ConnectedDevice = {
+  id: string;
+  device_name: string | null;
+  platform: string | null;
+  app_version: string | null;
+  signed_in_at: string;
+  last_seen_at: string;
+  /** The device making the request. */
+  current: boolean;
+};

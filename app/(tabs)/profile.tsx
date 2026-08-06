@@ -425,7 +425,7 @@ export default function ProfileScreen() {
               />
               <SettingsRow
                 label="Connected devices"
-                onPress={() => console.log('Open connected devices')}
+                onPress={() => router.push('/devices')}
               />
               <SettingsRow label="Sign out" destructive onPress={confirmSignOut} />
             </View>

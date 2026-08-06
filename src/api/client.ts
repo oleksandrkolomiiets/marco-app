@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { deviceHeaders } from '@/api/device';
 import type { RefreshTokenResponse } from '@/types/api';
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -46,9 +47,19 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Computed once: neither the device name nor the OS version changes while the
+// app is running.
+const deviceMeta = deviceHeaders();
+
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.set('Authorization', `Bearer ${token}`);
+  // On every request, not just the auth ones — the server only reads them at
+  // sign-in and refresh, and keeping it unconditional means a new auth route
+  // can't quietly forget to identify its device.
+  for (const [key, value] of Object.entries(deviceMeta)) {
+    config.headers.set(key, value);
+  }
   return config;
 });
 
@@ -90,10 +101,22 @@ export async function refreshSession(): Promise<string> {
   }
 }
 
+// The server answers this when the device's session has been signed out from
+// the devices screen on another device. Refreshing cannot fix it — the refresh
+// token was deleted with the session — so don't spend a round trip finding out.
+const SESSION_REVOKED = 'session_revoked';
+
 apiClient.interceptors.response.use(
   (res) => res.data,
   async (error: AxiosError<{ error?: string }>) => {
     const original = error.config as RetryableRequestConfig | undefined;
+    if (
+      error.response?.status === 401 &&
+      error.response.data?.error === SESSION_REVOKED
+    ) {
+      useAuthStore.getState().clearAuth();
+      throw new Error('This device was signed out.');
+    }
     if (
       error.response?.status === 401 &&
       original &&

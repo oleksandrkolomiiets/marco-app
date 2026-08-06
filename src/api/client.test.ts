@@ -343,6 +343,38 @@ describe('api client', () => {
     );
   });
 
+  describe('a revoked device session', () => {
+    it('clears the session without trying to refresh', async () => {
+      useAuthStore.setState({
+        accessToken: 'dead-access',
+        refreshToken: 'dead-refresh',
+        isAuthenticated: true,
+      });
+      adapter.mockImplementation(async (config) => {
+        throw httpError(config, 401, { error: 'session_revoked' });
+      });
+
+      await expect(api.get('/api/v1/me')).rejects.toThrow('This device was signed out.');
+
+      // One call: the refresh token died with the session, so attempting a
+      // refresh could only fail.
+      expect(adapter).toHaveBeenCalledTimes(1);
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      expect(useAuthStore.getState().accessToken).toBeNull();
+    });
+  });
+
+  describe('device headers', () => {
+    it('identifies the device on every request', async () => {
+      adapter.mockImplementation(async (config) => ok(config, { ok: true }));
+
+      await api.get('/api/v1/me');
+
+      const sent = adapter.mock.calls[0]?.[0];
+      expect(sent?.headers?.['X-Device-Platform']).toBeDefined();
+    });
+  });
+
   describe('per-request config', () => {
     it('passes a timeout override through to the request', async () => {
       adapter.mockImplementation(async (config) => ok(config, { ok: true }));
