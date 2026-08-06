@@ -414,7 +414,7 @@ export default function ProfileScreen() {
             <View style={{ marginBottom: 8 }}>
               <SettingsRow
                 label="Notifications"
-                onPress={() => console.log('Open notifications')}
+                onPress={() => router.push('/notifications')}
               />
               {/* Read the real plan — this was hardcoded to "Premium", so a free
                   account was told it had a subscription while the rest of the
