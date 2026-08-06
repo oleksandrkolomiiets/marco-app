@@ -117,7 +117,10 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
         />
         {hasBody ? (
           <>
-            <CuePointsSection cuePoints={lesson.cue_points} />
+            <CuePointsSection
+              cuePoints={lesson.cue_points}
+              hasVideo={lesson.video_url !== null}
+            />
             <CommonMistakeCard
               pct={lesson.common_mistake_pct}
               text={lesson.common_mistake_text}
@@ -406,7 +409,13 @@ function VideoBlock({
   );
 }
 
-function CuePointsSection({ cuePoints }: { cuePoints: CuePoint[] | null }) {
+function CuePointsSection({
+  cuePoints,
+  hasVideo,
+}: {
+  cuePoints: CuePoint[] | null;
+  hasVideo: boolean;
+}) {
   if (!cuePoints || cuePoints.length === 0) return null;
   const items = cuePoints.slice(0, 3);
 
@@ -439,20 +448,28 @@ function CuePointsSection({ cuePoints }: { cuePoints: CuePoint[] | null }) {
               borderColor: COLORS.divider,
             }}
           >
-            <Text
-              style={{
-                width: 36,
-                fontFamily: 'InstrumentSerif_400Regular',
-                fontSize: 11,
-                color: COLORS.mute,
-              }}
-            >
-              {formatCueTimestamp(cue.timestamp_seconds)}
-            </Text>
+            {/* These read as positions in the coaching clip, and there is no
+                clip: no lesson has a video_url, and every cue in the seed sits
+                at 0:03 / 0:07 / 0:11 — a CHECK constraint allows nothing else.
+                The cue text is real coaching; the times were mock decoration.
+                They come back when a lesson actually has something to play. */}
+            {hasVideo ? (
+              <Text
+                style={{
+                  width: 36,
+                  fontFamily: 'InstrumentSerif_400Regular',
+                  fontSize: 11,
+                  color: COLORS.mute,
+                }}
+              >
+                {formatCueTimestamp(cue.timestamp_seconds)}
+              </Text>
+            ) : null}
             <Text
               style={{
                 flex: 1,
-                paddingHorizontal: 12,
+                paddingRight: 12,
+                paddingLeft: hasVideo ? 12 : 0,
                 fontSize: 14,
                 color: COLORS.ink,
               }}
