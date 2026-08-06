@@ -89,6 +89,12 @@ const getInitial = (name: string | null): string => {
   return trimmed.length > 0 ? trimmed.charAt(0).toUpperCase() : '?';
 };
 
+// The tiles read "<value> <label>", so a count of one made them say
+// "1 Lessons learned" — which is every player's first reading of the screen.
+// The matches list already gets this right; the tiles didn't.
+const countLabel = (n: number, one: string, many: string): string =>
+  n === 1 ? one : many;
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
@@ -254,13 +260,27 @@ export default function ProfileScreen() {
             {/* Stats grid — row 1: 3 tiles, row 2: 2 tiles */}
             <View style={{ marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
-                <StatTile label="Lessons mastered" value={String(mastered)} />
-                <StatTile label="Lessons learned" value={String(learned)} />
+                <StatTile
+                  label={countLabel(mastered, 'Lesson mastered', 'Lessons mastered')}
+                  value={String(mastered)}
+                />
+                <StatTile
+                  label={countLabel(learned, 'Lesson learned', 'Lessons learned')}
+                  value={String(learned)}
+                />
                 <StatTile label="Mastery rate" value={`${masteryRate}%`} highlighted />
               </View>
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
                 <StatTile
-                  label="Matches logged"
+                  // Counted over the same 30 days as the win rate beside it, so
+                  // it has to say so. Unqualified next to "Win rate (30d)" it
+                  // read as a career total, and the screen it opens is scoped
+                  // to 30 days too.
+                  label={countLabel(
+                    matchStats30d.total,
+                    'Match logged (30d)',
+                    'Matches logged (30d)',
+                  )}
                   value={String(matchStats30d.total)}
                   onPress={() => router.push('/matches')}
                   withChevron
