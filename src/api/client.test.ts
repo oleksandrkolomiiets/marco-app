@@ -219,6 +219,85 @@ describe('api client', () => {
     });
   });
 
+  describe('401 from the credential endpoints', () => {
+    // Signing in with a wrong password is a 401, but there is no session to
+    // refresh — the screen matches on the server's code to decide which field
+    // to put the error under.
+    it.each([
+      ['/auth/signin', 'wrong_password'],
+      ['/auth/signin', 'no_account'],
+      ['/auth/signup', 'email already registered'],
+      ['/auth/google', 'invalid id token'],
+    ])('surfaces the server error from %s and does not refresh', async (url, serverError) => {
+      adapter.mockImplementation(async (config) => {
+        throw httpError(config, 401, { error: serverError });
+      });
+
+      await expect(api.post(url, { email: 'a@b.c' })).rejects.toThrow(serverError);
+      expect(adapter).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves an existing session alone when a sign-in attempt 401s', async () => {
+      useAuthStore.setState({
+        accessToken: 'live-access',
+        refreshToken: 'live-refresh',
+        user: null,
+        isAuthenticated: true,
+      });
+      adapter.mockImplementation(async (config) => {
+        throw httpError(config, 401, { error: 'wrong_password' });
+      });
+
+      await expect(
+        api.post('/auth/signin', { email: 'a@b.c', password: 'nope' }),
+      ).rejects.toThrow('wrong_password');
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    });
+
+    it('still refreshes on a 401 from an authenticated auth route', async () => {
+      useAuthStore.setState({
+        accessToken: 'old-access',
+        refreshToken: 'good-refresh',
+        user: null,
+        isAuthenticated: true,
+      });
+      adapter.mockImplementation(async (config) => {
+        if (config.url === '/auth/refresh') {
+          return ok(config, { access_token: 'new-access', refresh_token: 'new-refresh' });
+        }
+        if (config.headers?.get?.('Authorization') === 'Bearer new-access') {
+          return ok(config, { done: true });
+        }
+        throw httpError(config, 401, { error: 'token expired' });
+      });
+
+      await expect(api.post('/auth/signout', {})).resolves.toEqual({ done: true });
+      expect(useAuthStore.getState().accessToken).toBe('new-access');
+    });
+  });
+
+  describe('a failed refresh', () => {
+    it('rejects with the server error, not the raw axios message', async () => {
+      useAuthStore.setState({
+        accessToken: 'old-access',
+        refreshToken: 'dead-refresh',
+        user: null,
+        isAuthenticated: true,
+      });
+      adapter.mockImplementation(async (config) => {
+        throw httpError(
+          config,
+          401,
+          config.url === '/auth/refresh'
+            ? { error: 'refresh token revoked' }
+            : { error: 'token expired' },
+        );
+      });
+
+      await expect(api.get('/protected')).rejects.toThrow('token expired');
+    });
+  });
+
   describe('non-401 errors', () => {
     it('rejects with the backend error string', async () => {
       adapter.mockImplementation(async (config) => {

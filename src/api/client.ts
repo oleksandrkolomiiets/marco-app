@@ -7,6 +7,15 @@ import type { RefreshTokenResponse } from '@/types/api';
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
+// Endpoints that establish a session rather than use one. A 401 from these is
+// the server rejecting credentials — "wrong_password", "no_account" — not an
+// expired access token, and there is nothing to refresh. /auth/signout is
+// deliberately absent: it authenticates like any other call.
+const CREDENTIAL_ENDPOINTS = ['/auth/signin', '/auth/signup', '/auth/google'];
+
+const isCredentialEndpoint = (url: string | undefined): boolean =>
+  url !== undefined && CREDENTIAL_ENDPOINTS.some((path) => url.includes(path));
+
 const baseURL = process.env.EXPO_PUBLIC_API_URL;
 
 // Bearer tokens ride on every request — never let a release build send them
@@ -70,7 +79,17 @@ apiClient.interceptors.response.use(
   (res) => res.data,
   async (error: AxiosError<{ error?: string }>) => {
     const original = error.config as RetryableRequestConfig | undefined;
-    if (error.response?.status === 401 && original && !original._retry) {
+    if (
+      error.response?.status === 401 &&
+      original &&
+      !original._retry &&
+      // Signing in with a wrong password used to fall into the refresh branch:
+      // refreshSession threw "No refresh token" (nobody is signed in), the
+      // catch below rethrew the raw AxiosError, and the sign-in screen — which
+      // matches on the server's "wrong_password" / "no_account" — showed
+      // axios's "Request failed with status code 401" instead.
+      !isCredentialEndpoint(original.url)
+    ) {
       // The refresh call itself 401ed — tokens are dead, sign out immediately.
       if (original.url?.includes('/auth/refresh')) {
         useAuthStore.getState().clearAuth();
@@ -88,7 +107,10 @@ apiClient.interceptors.response.use(
         // refreshSession has already cleared the session; clearAuth is
         // idempotent, so this stays as a defensive backstop.
         useAuthStore.getState().clearAuth();
-        throw error;
+        // Map like every other path — rethrowing the AxiosError here handed
+        // callers "Request failed with status code 401" instead of whatever
+        // the server actually said.
+        throw new Error(error.response?.data?.error ?? error.message);
       }
     }
     throw new Error(error.response?.data?.error ?? error.message);
