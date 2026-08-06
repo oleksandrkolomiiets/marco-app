@@ -123,7 +123,7 @@ function ResultsView({
         ) : null}
       </ScrollView>
 
-      <FooterCTA passed={attempt.passed} onPress={onDone} />
+      <FooterCTA onPress={onDone} />
     </SafeAreaView>
   );
 }
@@ -638,7 +638,7 @@ function AnswerCard({
   );
 }
 
-function FooterCTA({ passed, onPress }: { passed: boolean; onPress: () => void }) {
+function FooterCTA({ onPress }: { onPress: () => void }) {
   return (
     <View
       style={{
@@ -665,8 +665,14 @@ function FooterCTA({ passed, onPress }: { passed: boolean; onPress: () => void }
           justifyContent: 'center',
         }}
       >
+        {/* Both states go home, so both states say so. Passing used to relabel
+            this button "Claim your padel license" — but there is nothing to
+            claim: the licence is the "L1" and "Rookie license unlocked" already
+            printed above, it is stored nowhere, and the button ran the same
+            router.replace('/(tabs)') as the failing one. Tapping it looked like
+            the reward had failed to arrive. */}
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
-          {passed ? 'Claim your padel license' : 'Back to home'}
+          Back to home
         </Text>
       </Pressable>
     </View>
