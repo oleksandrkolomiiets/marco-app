@@ -121,10 +121,7 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
               cuePoints={lesson.cue_points}
               hasVideo={lesson.video_url !== null}
             />
-            <CommonMistakeCard
-              pct={lesson.common_mistake_pct}
-              text={lesson.common_mistake_text}
-            />
+            <CommonMistakeCard text={lesson.common_mistake_text} />
             <FocusSection focus={lesson.focus} />
             <DrillCard drill={lesson.drill} />
           </>
@@ -491,15 +488,12 @@ function CuePointsSection({
   );
 }
 
-function CommonMistakeCard({
-  pct,
-  text,
-}: {
-  pct: number | null;
-  text: string | null;
-}) {
+// The header used to read "COMMON MISTAKE · 62%". Nothing measured that 62%
+// — it was authored per lesson and presented as a share of players who make
+// the mistake. The mistake itself is real coaching and stays; the statistic
+// dressing it up did not survive the check.
+function CommonMistakeCard({ text }: { text: string | null }) {
   if (!text) return null;
-  const label = pct != null ? `Common mistake · ${pct}%` : 'Common mistake';
   return (
     <View
       style={{
@@ -532,7 +526,7 @@ function CommonMistakeCard({
             color: COLORS.white,
           }}
         >
-          {label}
+          Common mistake
         </Text>
       </View>
       <Text style={{ fontSize: 14, lineHeight: 18, color: COLORS.white }}>

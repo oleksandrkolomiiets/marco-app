@@ -60,7 +60,6 @@ export type Lesson = {
   thumbnail_url: string | null;
   duration_seconds: number | null;
   cue_points: CuePoint[];
-  common_mistake_pct: number | null;
   common_mistake_text: string | null;
   drill: LessonDrill | null;
   is_free: boolean;
