@@ -1,0 +1,43 @@
+src/notifications/plan.ts
+  s_a0286b603db96d::t_8a54e50dcf87de 2
+src/hooks/computePreparationStats.test.ts
+  s_a0286b603db96d::t_d826b76893b919 1-141
+src/time/wallClock.ts
+  s_a0286b603db96d::t_700a951acd5cb8 1-37
+src/time/wallClock.test.ts
+  s_a0286b603db96d::t_c5450e445113bb 1-66
+src/home/coachLine.ts
+  s_a0286b603db96d::t_09668257a49fd9 1-51
+app/(tabs)/index.tsx
+  s_a0286b603db96d::t_007898b1706ec2 119-120
+  s_a0286b603db96d::t_b1021f8a25414e 133
+  s_a0286b603db96d::t_6c978c17a62fa0 17
+  s_a0286b603db96d::t_406aae3a4f6744 16
+app/match-preparation.tsx
+  s_a0286b603db96d::t_63fe86825cd4d2 17
+  s_a0286b603db96d::t_eefeb4db0a7f24 69,73-82
+src/home/coachLine.test.ts
+  s_a0286b603db96d::t_be3231ac1ebebd 1-107
+src/components/preparation/PreparationSheet.tsx
+  s_a0286b603db96d::t_26653a1577957b 18
+  s_a0286b603db96d::t_2203eadc9b5e55 610
+src/hooks/usePreparation.ts
+  s_a0286b603db96d::t_53d5032586e425 95-97,101,103-115
+  s_a0286b603db96d::t_7ebf611bc9d347 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "69daded9040345c972369de7cded3012f6f81172",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
