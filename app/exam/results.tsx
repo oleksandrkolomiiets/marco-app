@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { DIAGRAM_BY_SLUG } from '@/components/exam/ExamDiagrams';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
+import { examResultMessage } from '@/exam/resultMessage';
 import { useLatestExamAttempt } from '@/hooks/useExam';
 import type { ExamQuestionReview } from '@/types/api';
 
@@ -192,9 +193,7 @@ function ScoreCard({
   passed: boolean;
   wrongCount: number;
 }) {
-  const subLine = passed
-    ? 'You passed. Rookie license unlocked.'
-    : 'Close. Review the wrong ones and retake.';
+  const { headline, subLine } = examResultMessage(passed, wrongCount);
   const italicLine =
     wrongCount === 0
       ? null
@@ -232,7 +231,7 @@ function ScoreCard({
               fontStyle: 'italic',
             }}
           >
-            ¡Vamos!
+            {headline}
           </Text>
           <Text
             style={{
