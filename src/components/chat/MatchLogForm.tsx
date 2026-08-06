@@ -268,6 +268,13 @@ export function MatchLogForm({ visible, onClose, onSaved, prefill, editMatch, me
       if (useCustomDate) return isRealIsoDate(customDate.trim());
       return true;
     }
+    // Won/lost/draw is the one answer the log exists to capture: it drives the
+    // record, the win rate, the Wins/Losses filters and the first-win
+    // achievement. Continue used to be live here with nothing picked, so a
+    // stray tap saved a match that reads "Played", belongs to neither filter,
+    // and leaves the header saying "1 match · 0-0 record". Everything after
+    // this step really is optional and stays skippable.
+    if (step === 4) return form.result !== null;
     return true;
   };
 
@@ -576,7 +583,17 @@ type StepWhoProps = {
 function StepWho({ form, setForm, partners, selectingNew, setSelectingNew, newPartnerName, setNewPartnerName }: StepWhoProps) {
   return (
     <View>
-      <StepHeader title="Who'd you play with?" subtitle='"Same partner? Or someone new!"' italic />
+      {/* "Same partner?" only makes sense once there is a previous one — on a
+          first log the list below is empty and the question had no referent. */}
+      <StepHeader
+        title="Who'd you play with?"
+        subtitle={
+          partners.length > 0
+            ? '"Same partner? Or someone new!"'
+            : '"Who was on your side of the net?"'
+        }
+        italic
+      />
       {partners.map((p) => {
         const selected = !selectingNew && form.partnerName === p.partner_name;
         return (

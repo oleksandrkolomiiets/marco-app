@@ -275,7 +275,7 @@ const StatsHeader = ({ stats }: StatsHeaderProps) => {
       <MarcoAvatar size={42} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.ink }}>
-          {stats.total} matches · last 30 days
+          {stats.total} {stats.total === 1 ? 'match' : 'matches'} · last 30 days
         </Text>
         <Text
           style={{
@@ -443,8 +443,11 @@ const EmptyState = () => (
       alignItems: 'center',
     }}
   >
+    {/* The old copy said the only way in was "log a match with Marco", with
+        the + that opens the six-step form sitting in the header above it. */}
     <Text style={{ fontSize: 14, color: COLORS.mute, textAlign: 'center' }}>
-      No matches in this view yet. Log a match with Marco and it&apos;ll show up here.
+      No matches in this view yet. Tap + to add one, or tell Marco about it in
+      the chat.
     </Text>
   </View>
 );
