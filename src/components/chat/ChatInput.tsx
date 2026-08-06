@@ -1,14 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { DashedRule } from '@/components/ui/DashedRule';
 
 type ChatInputProps = {
   onSend: (text: string) => void;
   disabled?: boolean;
+  /**
+   * Text to drop into the composer, e.g. the question "Ask Marco about this"
+   * opens a match log with. Applied once per distinct draft so it never
+   * overwrites something the player is part-way through typing.
+   */
+  draft?: string;
 };
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, draft }: ChatInputProps) {
   const [value, setValue] = useState('');
+  const appliedDraft = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!draft || appliedDraft.current === draft) return;
+    appliedDraft.current = draft;
+    setValue(draft);
+  }, [draft]);
 
   const submit = () => {
     const trimmed = value.trim();

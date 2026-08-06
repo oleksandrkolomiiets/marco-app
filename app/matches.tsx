@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { MatchLogForm } from '@/components/chat/MatchLogForm';
 import { MatchDetailSheet } from '@/components/matches/MatchDetailSheet';
+import { askMarcoDraft } from '@/matches/askMarcoDraft';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
 import {
@@ -235,8 +236,10 @@ export default function MatchesScreen() {
         isUsualPartner={selectedPartnerIsUsual}
         onClose={() => setSelectedMatchId(null)}
         onAskMarco={() => {
+          if (!selectedMatch) return;
+          const draft = askMarcoDraft(selectedMatch);
           setSelectedMatchId(null);
-          router.push('/(tabs)/chat');
+          router.push({ pathname: '/(tabs)/chat', params: { draft } });
         }}
         onEdit={() => {
           if (!selectedMatch) return;

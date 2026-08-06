@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteMessage, getMessages, patchFeedback, sendMessage } from '@/api/chat';
 import { ChatInput } from '@/components/chat/ChatInput';
@@ -108,6 +108,9 @@ function toLocalMessage(m: ChatMessage): LocalMessage {
 
 export default function ChatScreen() {
   const router = useRouter();
+  // "Ask Marco about this" on a match log arrives here with the question
+  // already written, so the chat opens on that match instead of an empty box.
+  const { draft } = useLocalSearchParams<{ draft?: string }>();
   const queryClient = useQueryClient();
   // messages is stored in DESC order (newest first) so it maps 1:1 onto an
   // inverted FlatList's `data` prop — data[0] renders visually at the bottom.
@@ -691,7 +694,7 @@ export default function ChatScreen() {
           removeClippedSubviews={false}
         />
 
-        <ChatInput onSend={handleSend} disabled={isStreaming} />
+        <ChatInput onSend={handleSend} disabled={isStreaming} draft={draft} />
       </KeyboardAvoidingView>
 
       <MatchLogForm
