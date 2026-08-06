@@ -158,14 +158,9 @@ export default function ProfileScreen() {
           >
             You
           </Text>
-          <Pressable
-            onPress={() => console.log('Open settings')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Open settings"
-          >
-            <Text style={{ fontSize: 18, color: '#4A5560' }}>⚙</Text>
-          </Pressable>
+          {/* The ⚙ that used to sit here only ran console.log('Open settings'),
+              and the settings it promised are already on this screen — the
+              PLAYER SETTINGS section is further down the same scroll. */}
         </View>
 
         {isLoading ? (
