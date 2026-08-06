@@ -1,0 +1,46 @@
+src/notifications/schedule.ts
+  s_a0286b603db96d::t_7e27ca08d658c9 1-54
+  s_a0286b603db96d::t_abe0c65e57dc94 55-58
+src/notifications/permission.ts
+  s_a0286b603db96d::t_9221893e80a062 1-26,28-39
+  s_a0286b603db96d::t_8b1f49e55a2035 27
+src/notifications/plan.ts
+  s_a0286b603db96d::t_b696f0da5641ca 22,24-52,54,59,70,72,76,79
+  s_a0286b603db96d::t_842aa385ed3c7d 1-21,23,53,55-58,60-69,71,73-75,77-78,80-126
+app/(tabs)/profile.tsx
+  s_a0286b603db96d::t_ea13182bbf03f8 417
+src/stores/notificationStore.ts
+  s_a0286b603db96d::t_fd79eccac33b30 1-80
+app/notifications.tsx
+  s_a0286b603db96d::t_5de3d85d2e1ad4 63
+  s_a0286b603db96d::t_2324a0fceb2fcd 83,86-90
+  s_a0286b603db96d::t_366c3b003ecfe2 220-236
+  s_a0286b603db96d::t_79c5378cf72b4b 1-12,15-62,64-82,84-85,91-219,237-367
+  s_a0286b603db96d::t_d81393ab79ebfc 13-14
+src/notifications/plan.test.ts
+  s_a0286b603db96d::t_67f91f7ede1b49 10-25,30
+  s_a0286b603db96d::t_5996257e08d1f7 128,137,147,157,164,167-193
+  s_a0286b603db96d::t_8fa6c0a6559082 1-9,26-29,31-127,129-136,138-146,148-156,158-163,165-166,194-197
+app.json
+  s_a0286b603db96d::t_2024b2456cc325 33-34
+package-lock.json
+  s_a0286b603db96d::t_a90eb447c1b19f 24,2887-2892,6079-6091,6422-6427,8734-8753,10030-10045,10324-10339,13015-13030,16369-16381
+package.json
+  s_a0286b603db96d::t_47a84ef7aa66e6 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "9a154db2dba3fd71e3f410282dc6b82c4423b4e7",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
