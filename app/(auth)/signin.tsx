@@ -16,6 +16,10 @@ import { SketchyButton } from '@/components/ui/SketchyButton';
 import { Field } from '@/components/ui/Field';
 import { colors } from '@/constants/colors';
 
+// Mirrors the server's wording (Laravel's auth.failed), used only when the
+// request failed without one — e.g. the connection dropped before a response.
+const INVALID_CREDENTIALS = 'These credentials do not match our records.';
+
 export default function SignInScreen() {
   const router = useRouter();
   const setTokens = useAuthStore((s) => s.setTokens);
@@ -38,14 +42,13 @@ export default function SignInScreen() {
       const data = await emailSignIn(email.trim(), password);
       setTokens(data.access_token, data.refresh_token, data.user);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sign-in failed. Please try again.';
-      if (msg === 'no_account') {
-        setEmailError('No account with this email. Create one?');
-      } else if (msg === 'wrong_password') {
-        setPasswordError("That password doesn't match. Try again or reset it.");
-      } else {
-        setPasswordError(msg);
-      }
+      // One neutral message for every rejection. Saying "no account with this
+      // email" told the user which half was wrong — and told anyone probing the
+      // form which addresses are registered. The server now answers all three
+      // rejection paths identically; this shows whatever it said, and only
+      // falls back when there is no message at all (a dropped connection).
+      const msg = e instanceof Error && e.message ? e.message : INVALID_CREDENTIALS;
+      setEmailError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -99,12 +102,6 @@ export default function SignInScreen() {
               textContentType="emailAddress"
               placeholder="you@example.com"
             />
-
-            {emailError?.includes('Create one') ? (
-              <Pressable onPress={() => router.replace('/(auth)/signup')} style={styles.inlineAction}>
-                <Text style={styles.inlineActionText}>Create account →</Text>
-              </Pressable>
-            ) : null}
 
             <Field
               label="Password"
@@ -188,8 +185,6 @@ const styles = {
     color: colors.ink,
   },
   form: { paddingTop: 22 },
-  inlineAction: { marginTop: -8, marginBottom: 10 },
-  inlineActionText: { fontSize: 13, fontWeight: '600' as const, color: colors.teal },
   eyeToggle: { fontSize: 13, fontWeight: '500' as const, color: colors.inkSoft },
   forgotWrap: { alignSelf: 'flex-end' as const, marginTop: -4 },
   forgotText: {

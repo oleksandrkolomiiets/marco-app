@@ -8,9 +8,9 @@ import type { RefreshTokenResponse } from '@/types/api';
 type RetryableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 // Endpoints that establish a session rather than use one. A 401 from these is
-// the server rejecting credentials — "wrong_password", "no_account" — not an
-// expired access token, and there is nothing to refresh. /auth/signout is
-// deliberately absent: it authenticates like any other call.
+// the server rejecting credentials, not an expired access token, and there is
+// nothing to refresh. /auth/signout is deliberately absent: it authenticates
+// like any other call.
 const CREDENTIAL_ENDPOINTS = ['/auth/signin', '/auth/signup', '/auth/google'];
 
 const isCredentialEndpoint = (url: string | undefined): boolean =>
@@ -85,9 +85,9 @@ apiClient.interceptors.response.use(
       !original._retry &&
       // Signing in with a wrong password used to fall into the refresh branch:
       // refreshSession threw "No refresh token" (nobody is signed in), the
-      // catch below rethrew the raw AxiosError, and the sign-in screen — which
-      // matches on the server's "wrong_password" / "no_account" — showed
-      // axios's "Request failed with status code 401" instead.
+      // catch below rethrew the raw AxiosError, and the sign-in screen showed
+      // axios's "Request failed with status code 401" instead of the server's
+      // own message.
       !isCredentialEndpoint(original.url)
     ) {
       // The refresh call itself 401ed — tokens are dead, sign out immediately.

@@ -224,8 +224,7 @@ describe('api client', () => {
     // refresh — the screen matches on the server's code to decide which field
     // to put the error under.
     it.each([
-      ['/auth/signin', 'wrong_password'],
-      ['/auth/signin', 'no_account'],
+      ['/auth/signin', 'These credentials do not match our records.'],
       ['/auth/signup', 'email already registered'],
       ['/auth/google', 'invalid id token'],
     ])('surfaces the server error from %s and does not refresh', async (url, serverError) => {
@@ -245,12 +244,14 @@ describe('api client', () => {
         isAuthenticated: true,
       });
       adapter.mockImplementation(async (config) => {
-        throw httpError(config, 401, { error: 'wrong_password' });
+        throw httpError(config, 401, {
+          error: 'These credentials do not match our records.',
+        });
       });
 
       await expect(
         api.post('/auth/signin', { email: 'a@b.c', password: 'nope' }),
-      ).rejects.toThrow('wrong_password');
+      ).rejects.toThrow('do not match our records');
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
     });
 
