@@ -111,7 +111,10 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
         contentContainerStyle={{ paddingBottom: 140 }}
       >
         <TitleBlock title={lesson.title} quote={quote} />
-        <VideoBlock videoUrl={lesson.video_url} />
+        <VideoBlock
+          videoUrl={lesson.video_url}
+          durationSeconds={lesson.duration_seconds}
+        />
         {hasBody ? (
           <>
             <CuePointsSection cuePoints={lesson.cue_points} />
@@ -123,7 +126,7 @@ function LessonView({ lesson, onBack }: { lesson: Lesson; onBack: () => void }) 
             <DrillCard drill={lesson.drill} />
           </>
         ) : (
-          <EmptyBodyNote />
+          <EmptyBodyNote hasVideo={lesson.video_url !== null} />
         )}
       </ScrollView>
 
@@ -214,7 +217,27 @@ function TitleBlock({ title, quote }: { title: string; quote: string }) {
   );
 }
 
-function VideoBlock({ videoUrl }: { videoUrl: string | null }) {
+// The overlay caption was the literal string "15s · loops · tap to scrub" in
+// both branches. duration_seconds is null across the seeded curriculum, so it
+// quoted a runtime nobody had measured — and in the no-clip branch it promised
+// scrubbing on a clip that does not exist at all.
+function playerHint(durationSeconds: number | null): string {
+  const loopAndScrub = 'loops · tap to scrub';
+  if (durationSeconds === null) return loopAndScrub;
+  const label =
+    durationSeconds < 60
+      ? `${durationSeconds}s`
+      : `${Math.round(durationSeconds / 60)} min`;
+  return `${label} · ${loopAndScrub}`;
+}
+
+function VideoBlock({
+  videoUrl,
+  durationSeconds,
+}: {
+  videoUrl: string | null;
+  durationSeconds: number | null;
+}) {
   const [showHint, setShowHint] = useState(true);
   const [paused, setPaused] = useState(false);
   // useVideoPlayer must run unconditionally (hook); it accepts a null source
@@ -311,7 +334,7 @@ function VideoBlock({ videoUrl }: { videoUrl: string | null }) {
             color: 'rgba(255,255,255,0.7)',
           }}
         >
-          15s · loops · tap to scrub
+          no clip yet
         </Text>
       </View>
     );
@@ -376,7 +399,7 @@ function VideoBlock({ videoUrl }: { videoUrl: string | null }) {
             color: 'rgba(255,255,255,0.8)',
           }}
         >
-          15s · loops · tap to scrub
+          {playerHint(durationSeconds)}
         </Animated.Text>
       ) : null}
     </Pressable>
@@ -528,12 +551,17 @@ function FocusSection({ focus }: { focus: string | null }) {
 // Shown when the lesson has no written notes at all — better than the blank
 // stretch that used to sit between the video and the Mark as bar, and it points
 // somewhere useful rather than looking like a failed load.
-function EmptyBodyNote() {
+function EmptyBodyNote({ hasVideo }: { hasVideo: boolean }) {
   return (
     <View style={{ paddingHorizontal: 20, marginTop: 4, marginBottom: 12 }}>
       <DashedBox radius={14} style={{ padding: 16 }}>
+        {/* "the clip is the lesson" only holds when there is a clip. On the
+            seeded curriculum video_url is null, so this note was pointing at
+            a video that isn't there either. */}
         <Text style={{ fontSize: 14, lineHeight: 20, color: COLORS.ink }}>
-          No written notes for this one yet — the clip is the lesson.
+          {hasVideo
+            ? 'No written notes for this one yet — the clip is the lesson.'
+            : 'Nothing written up for this one yet.'}
         </Text>
         <Text style={{ fontSize: 13, lineHeight: 19, color: COLORS.mute, marginTop: 6 }}>
           Ask Marco about it in chat and he&apos;ll walk you through the detail.
