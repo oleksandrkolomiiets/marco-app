@@ -43,11 +43,16 @@ const stepStyles = {
   },
 } as const;
 
+// Step 4 read "Court side shapes 70% of what I'll teach you next." Nothing
+// computes that 70% and nothing could — it is a made-up number worn as a fact,
+// on the first screen a player ever sees Marco speak. The reason the question
+// is worth asking is true without one: the side you stand on is what decides
+// which shots keep arriving.
 const QUOTES: Record<number, string> = {
   1: "¡Hola! Tell me about you — I'll skip the boring bits.",
   2: 'More court time → faster progress. But not by much.',
   3: 'Tells me which side to demo cues from.',
-  4: "Court side shapes 70% of what I'll teach you next.",
+  4: "Left or right changes which shots you'll hit most.",
   5: "Last one. Then we're on court.",
 };
 
