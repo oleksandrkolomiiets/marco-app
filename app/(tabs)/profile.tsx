@@ -10,6 +10,7 @@ import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useLessons } from '@/hooks/useLessons';
 import { computeMatchStats, useMatches } from '@/hooks/useMatches';
+import { useMatchPreparation } from '@/hooks/usePreparation';
 import { useUser } from '@/hooks/useUser';
 import { useAuthStore } from '@/stores/authStore';
 import type { Achievement, CourtSide, Plan, SkillLevel, User } from '@/types/api';
@@ -70,7 +71,9 @@ const buildSubtitle = (user: User): string => {
   const parts: string[] = [];
   if (user.skill_level) parts.push(SKILL_LEVEL_LABEL[user.skill_level]);
   if (user.court_side) parts.push(COURT_SIDE_LABEL[user.court_side]);
-  parts.push('Madrid');
+  // No city is ever collected — there is no such column on users — so the
+  // hardcoded "Madrid" that used to sit here told every player they lived
+  // somewhere they had never said they lived.
   return parts.join(' · ');
 };
 
@@ -127,6 +130,11 @@ export default function ProfileScreen() {
   const total = lessons.length;
   const masteryRate = total > 0 ? Math.round((mastered / total) * 100) : 0;
   const matchStats30d = computeMatchStats(matches, 30);
+  // The tile sits between two real numbers and used to read a hardcoded "Open"
+  // — the same for a player with four preps waiting and one who has never made
+  // any. Count the ones still to be played, matching the Home card's wording.
+  const { data: preparations = [] } = useMatchPreparation();
+  const openPreparations = preparations.filter((p) => p.played_at === null).length;
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: '#FAF8F5' }}>
@@ -271,7 +279,11 @@ export default function ProfileScreen() {
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <StatTile
                   label="Match prep"
-                  value="Open"
+                  value={
+                    openPreparations === 0
+                      ? 'None open'
+                      : `${openPreparations} open`
+                  }
                   onPress={() => router.push('/match-preparation' as never)}
                   withChevron
                 />
