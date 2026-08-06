@@ -1,0 +1,38 @@
+src/api/client.ts
+  s_a0286b603db96d::t_3487da0d5b81ef 50-53,57-62
+  s_a0286b603db96d::t_2dccc7a5af1e48 7
+  s_a0286b603db96d::t_391ee0405577d5 104-108,113-119
+src/types/api.ts
+  s_a0286b603db96d::t_ed220ff511211b 313-324
+src/api/devices.ts
+  s_a0286b603db96d::t_b826afb1f9e9b6 1-21
+src/hooks/useDevices.ts
+  s_a0286b603db96d::t_52b4183db9029a 1-50
+app/devices.tsx
+  s_a0286b603db96d::t_a8f382ff670fe6 2-9
+  s_a0286b603db96d::t_d32c5c83f42fc5 170-182
+  s_a0286b603db96d::t_9f40606149bef8 1,10-84,92-169,183-389
+  s_a0286b603db96d::t_46122839a13952 85-91
+app/(tabs)/profile.tsx
+  s_a0286b603db96d::t_cc85f9b7c6a596 428
+src/api/client.test.ts
+  s_a0286b603db96d::t_dbd0a190bbaeb6 346-377
+src/api/device.ts
+  s_a0286b603db96d::t_56b172b7937556 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "036da566b364791fc85b315bc68eb4e8f289de26",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
