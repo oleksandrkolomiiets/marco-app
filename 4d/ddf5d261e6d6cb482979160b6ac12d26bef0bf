@@ -1,0 +1,23 @@
+src/exam/resultMessage.ts
+  s_a0286b603db96d::t_e9f29f15373d3d 1-37
+src/exam/resultMessage.test.ts
+  s_a0286b603db96d::t_290cb52a39e6c8 1-61
+app/exam/results.tsx
+  s_a0286b603db96d::t_76875f55f3e290 8,196,234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "4dddf5d261e6d6cb482979160b6ac12d26bef0bf",
+  "prompts": {},
+  "sessions": {
+    "s_a0286b603db96d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9f9a3b6-798c-4807-93e4-49ee02242114",
+        "model": "claude-opus-5"
+      },
+      "human_author": "oleksandr-channext <oleksandr@channext.com>"
+    }
+  }
+}
