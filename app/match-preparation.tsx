@@ -14,6 +14,7 @@ import {
   useUpdateMatchPreparation,
 } from '@/hooks/usePreparation';
 import { useMatches } from '@/hooks/useMatches';
+import { wallClockTime } from '@/time/wallClock';
 import type { MatchLog, MatchPreparation } from '@/types/api';
 
 const WEEKDAY_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -65,16 +66,20 @@ export default function MatchPreparationScreen() {
       // belongs in "Last matches" regardless of when it was scheduled —
       // covers early playthroughs and reschedules.
       const isPlayed = r.played_at !== null;
-      const isUpcoming = !isPlayed && new Date(r.scheduled_at).getTime() >= now;
+      const isUpcoming = !isPlayed && wallClockTime(r.scheduled_at) >= now;
       if (isUpcoming) up.push(r);
       else pa.push(r);
     }
-    up.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
-    pa.sort((a, b) => {
-      const aKey = a.played_at ?? a.scheduled_at;
-      const bKey = b.played_at ?? b.scheduled_at;
-      return new Date(bKey).getTime() - new Date(aKey).getTime();
-    });
+    up.sort((a, b) => wallClockTime(a.scheduled_at) - wallClockTime(b.scheduled_at));
+    // played_at is a real instant and scheduled_at is wall-clock-in-UTC, so the
+    // two have to be brought onto the same footing before they can be ordered
+    // against each other — otherwise a played prep sorts against an unplayed
+    // one as if it were hours away from where it actually sits.
+    const sortKey = (r: MatchPreparation): number =>
+      r.played_at !== null
+        ? new Date(r.played_at).getTime()
+        : wallClockTime(r.scheduled_at);
+    pa.sort((a, b) => sortKey(b) - sortKey(a));
     return { upcoming: up, past: pa };
   }, [items, now]);
 

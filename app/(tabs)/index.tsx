@@ -13,6 +13,8 @@ import {
   preparationFonts as F,
   stickerShadowSm,
 } from '@/components/preparation/theme';
+import { getCoachLine } from '@/home/coachLine';
+import { wallClockTime } from '@/time/wallClock';
 import { useUser } from '@/hooks/useUser';
 import { isLessonCompleted, useLessons } from '@/hooks/useLessons';
 import { useLatestExamAttempt } from '@/hooks/useExam';
@@ -114,15 +116,8 @@ const pickUpcomingPreparation = (
   if (!items || items.length === 0) return null;
   const now = Date.now();
   const upcoming = items
-    .filter(
-      (r) =>
-        r.played_at === null && new Date(r.scheduled_at).getTime() >= now,
-    )
-    .sort(
-      (a, b) =>
-        new Date(a.scheduled_at).getTime() -
-        new Date(b.scheduled_at).getTime(),
-    );
+    .filter((r) => r.played_at === null && wallClockTime(r.scheduled_at) >= now)
+    .sort((a, b) => wallClockTime(a.scheduled_at) - wallClockTime(b.scheduled_at));
   return upcoming[0] ?? null;
 };
 
@@ -135,44 +130,8 @@ const countUnplayedPastPreparations = (
   if (!items) return 0;
   const now = Date.now();
   return items.filter(
-    (r) => r.played_at === null && new Date(r.scheduled_at).getTime() < now,
+    (r) => r.played_at === null && wallClockTime(r.scheduled_at) < now,
   ).length;
-};
-
-type CoachLineInput = {
-  prep: MatchPreparation | null;
-  continueLesson: Lesson | null;
-  completedCount: number;
-  totalCount: number;
-};
-
-// Marco's line under the greeting. It was the hardcoded "Your bandeja's loose.
-// I queued a 90-sec fix." — shown to everyone on every launch, including a
-// brand-new account with no matches, no lessons and no exam, about a shot Marco
-// had never seen them hit. Nothing was queued either; there is no such queue.
-// Every branch below is read off state the player can go and check.
-const getCoachLine = ({
-  prep,
-  continueLesson,
-  completedCount,
-  totalCount,
-}: CoachLineInput): string => {
-  if (prep) {
-    const remaining = prep.drills.filter((d) => !d.completed).length;
-    if (remaining > 0) {
-      return `${remaining === 1 ? 'One drill' : `${remaining} drills`} left before your next match.`;
-    }
-    return 'Your prep queue is done. Go play.';
-  }
-  if (totalCount > 0 && completedCount === totalCount) {
-    return 'Every lesson done. Time to put it on court.';
-  }
-  if (continueLesson) {
-    return completedCount === 0
-      ? `Start with ${continueLesson.title} — that's where everyone begins.`
-      : `Next up: ${continueLesson.title}.`;
-  }
-  return 'Ready when you are.';
 };
 
 const getContinueLesson = (lessons: Lesson[] | undefined): Lesson | null => {

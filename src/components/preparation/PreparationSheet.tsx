@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMatches } from '@/hooks/useMatches';
+import { isPast } from '@/time/wallClock';
 import {
   preparationHeadline,
   useDeleteMatchPreparation,
@@ -606,8 +607,7 @@ function SheetBody({
           </View>
         </View>
 
-        {preparation.played_at !== null ||
-        new Date(preparation.scheduled_at).getTime() < Date.now() ? (
+        {preparation.played_at !== null || isPast(preparation.scheduled_at) ? (
           <GradeSelect
             grade={preparation.plan_grade}
             disabled={updatePreparation.isPending}

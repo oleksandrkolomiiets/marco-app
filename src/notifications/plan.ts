@@ -1,4 +1,5 @@
 import { preparationHeadline } from '@/hooks/usePreparation';
+import { wallClock } from '@/time/wallClock';
 import type { MatchPreparation } from '@/types/api';
 import type { NotificationPrefs } from '@/stores/notificationStore';
 
@@ -19,31 +20,6 @@ export type ScheduledPlan = {
   at: Date;
   title: string;
   body: string;
-};
-
-/**
- * scheduled_at is a wall-clock time encoded in UTC, not a real instant:
- * CreatePreparationForm builds it with Date.UTC() from the digits the player
- * typed, and every screen reads it back with getUTCHours(). "20:00" means
- * 20:00 on their own clock wherever they are.
- *
- * Rebuilding it as a local Date is what makes an alarm set for two hours
- * before the match actually fire two hours before it. Taking the ISO string at
- * face value put every reminder out by the UTC offset — two hours late here —
- * and made the notification quote 22:00 for a match the prep card called
- * 20:00.
- */
-const wallClock = (iso: string): Date => {
-  const d = new Date(iso);
-  return new Date(
-    d.getUTCFullYear(),
-    d.getUTCMonth(),
-    d.getUTCDate(),
-    d.getUTCHours(),
-    d.getUTCMinutes(),
-    0,
-    0,
-  );
 };
 
 const timeOfDay = (iso: string): string => {

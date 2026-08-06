@@ -9,6 +9,7 @@ import {
   updateMatchPreparation,
 } from '@/api/preparation';
 import { useAuthStore } from '@/stores/authStore';
+import { wallClockTime } from '@/time/wallClock';
 import type {
   CreateMatchPreparationParams,
   DrillInput,
@@ -91,12 +92,27 @@ export type PreparationStats = {
   planGraded: number;
 };
 
+/**
+ * `now` is a parameter so the window can be pinned in tests.
+ */
 export const computePreparationStats = (
   items: MatchPreparation[],
   withinDays = 30,
+  now: number = Date.now(),
 ): PreparationStats => {
-  const cutoff = Date.now() - withinDays * 24 * 60 * 60 * 1000;
-  const recent = items.filter((r) => new Date(r.scheduled_at).getTime() >= cutoff);
+  const cutoff = now - withinDays * 24 * 60 * 60 * 1000;
+  // "Last 30 days" needs bounding at both ends. This was a lower bound only,
+  // so a match planned for next month counted as a prep from the last 30 days
+  // — and because a queue for a future match has barely been started, it
+  // dragged AVG READY down. An average readiness only says something over
+  // matches that have actually been played.
+  const recent = items.filter((r) => {
+    const happenedAt =
+      r.played_at !== null
+        ? new Date(r.played_at).getTime()
+        : wallClockTime(r.scheduled_at);
+    return happenedAt >= cutoff && happenedAt <= now;
+  });
   if (recent.length === 0) {
     return { preps: 0, avgPreparation: 0, planWorked: 0, planGraded: 0 };
   }
