@@ -7,7 +7,12 @@ import { MatchLogForm } from '@/components/chat/MatchLogForm';
 import { MatchDetailSheet } from '@/components/matches/MatchDetailSheet';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { MarcoAvatar } from '@/components/ui/MarcoAvatar';
-import { computeMatchStats, matchesQueryKey, useMatches } from '@/hooks/useMatches';
+import {
+  computeMatchStats,
+  formatWinRate,
+  matchesQueryKey,
+  useMatches,
+} from '@/hooks/useMatches';
 import type { MatchLog } from '@/types/api';
 
 // Hard 2x2 ink offset — `box-shadow: 2px 2px 0` on the match rows and the
@@ -291,7 +296,7 @@ const StatsHeader = ({ stats }: StatsHeaderProps) => {
           fontWeight: '700',
         }}
       >
-        {stats.winRatePercent}%
+        {formatWinRate(stats)}
       </Text>
     </View>
   );

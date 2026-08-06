@@ -53,3 +53,11 @@ export const computeMatchStats = (matches: MatchLog[], withinDays?: number): Mat
     winRatePercent,
   };
 };
+
+/**
+ * Win rate for display. With nothing decided there is no rate, and printing
+ * the raw 0 said "you lost every match" — on a new account that sat directly
+ * beside "Matches logged · 0". Both screens that show the number use this.
+ */
+export const formatWinRate = (stats: MatchStats): string =>
+  stats.wins + stats.losses > 0 ? `${stats.winRatePercent}%` : '—';

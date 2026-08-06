@@ -9,7 +9,7 @@ import { DashedRule } from '@/components/ui/DashedRule';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useLessons } from '@/hooks/useLessons';
-import { computeMatchStats, useMatches } from '@/hooks/useMatches';
+import { computeMatchStats, formatWinRate, useMatches } from '@/hooks/useMatches';
 import { useMatchPreparation } from '@/hooks/usePreparation';
 import { useUser } from '@/hooks/useUser';
 import { useAuthStore } from '@/stores/authStore';
@@ -272,7 +272,7 @@ export default function ProfileScreen() {
                 />
                 <StatTile
                   label="Win rate (30d)"
-                  value={`${matchStats30d.winRatePercent}%`}
+                  value={formatWinRate(matchStats30d)}
                   onPress={() => router.push('/matches')}
                 />
               </View>
