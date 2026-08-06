@@ -135,6 +135,42 @@ const countUnplayedPastPreparations = (
   ).length;
 };
 
+type CoachLineInput = {
+  prep: MatchPreparation | null;
+  continueLesson: Lesson | null;
+  completedCount: number;
+  totalCount: number;
+};
+
+// Marco's line under the greeting. It was the hardcoded "Your bandeja's loose.
+// I queued a 90-sec fix." — shown to everyone on every launch, including a
+// brand-new account with no matches, no lessons and no exam, about a shot Marco
+// had never seen them hit. Nothing was queued either; there is no such queue.
+// Every branch below is read off state the player can go and check.
+const getCoachLine = ({
+  prep,
+  continueLesson,
+  completedCount,
+  totalCount,
+}: CoachLineInput): string => {
+  if (prep) {
+    const remaining = prep.drills.filter((d) => !d.completed).length;
+    if (remaining > 0) {
+      return `${remaining === 1 ? 'One drill' : `${remaining} drills`} left before your next match.`;
+    }
+    return 'Your prep queue is done. Go play.';
+  }
+  if (totalCount > 0 && completedCount === totalCount) {
+    return 'Every lesson done. Time to put it on court.';
+  }
+  if (continueLesson) {
+    return completedCount === 0
+      ? `Start with ${continueLesson.title} — that's where everyone begins.`
+      : `Next up: ${continueLesson.title}.`;
+  }
+  return 'Ready when you are.';
+};
+
 const getContinueLesson = (lessons: Lesson[] | undefined): Lesson | null => {
   if (!lessons || lessons.length === 0) return null;
   const next = lessons.find(
@@ -180,9 +216,20 @@ export default function HomeScreen() {
   const completedCount = lessons?.filter(isLessonCompleted).length ?? 0;
   const totalCount = lessons?.length ?? 0;
 
-  const lessonQuote = continueLesson?.tagline
-    ? `"${continueLesson.tagline}"`
-    : '"It\'s a slap, not a smash. Tranquilo."';
+  // No fallback quote. The old one — "It's a slap, not a smash. Tranquilo." —
+  // is bandeja coaching, and it was printed under whichever lesson happened to
+  // be next. On a new account that put smash advice under "The Ready Position".
+  // Most seeded lessons have no tagline, so the line simply doesn't render.
+  const lessonQuote = continueLesson?.tagline?.trim()
+    ? `"${continueLesson.tagline.trim()}"`
+    : null;
+
+  const coachLine = getCoachLine({
+    prep: upcomingPrep,
+    continueLesson,
+    completedCount,
+    totalCount,
+  });
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
@@ -310,7 +357,7 @@ export default function HomeScreen() {
                     fontWeight: '400',
                   }}
                 >
-                  Your bandeja&apos;s loose. I queued a 90-sec fix.
+                  {coachLine}
                 </Text>
               </View>
             </View>
@@ -361,27 +408,33 @@ export default function HomeScreen() {
                   width: '100%',
                 }}
               >
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 10,
-                    left: 10,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    borderRadius: 6,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <Text
+                {/* "15s · loop" was hardcoded. duration_seconds is null on
+                    every seeded lesson, so the badge was quoting a runtime for
+                    a clip nobody has uploaded. Show it only once a lesson
+                    carries a real duration. */}
+                {continueLesson?.duration_seconds ? (
+                  <View
                     style={{
-                      fontFamily: 'InstrumentSerif_400Regular',
-                      fontSize: 10,
-                      color: '#FFFFFF',
+                      position: 'absolute',
+                      top: 10,
+                      left: 10,
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
                     }}
                   >
-                    15s · loop
-                  </Text>
-                </View>
+                    <Text
+                      style={{
+                        fontFamily: 'InstrumentSerif_400Regular',
+                        fontSize: 10,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {formatDrillDuration(continueLesson.duration_seconds)}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {/* Only new if the player has genuinely never opened it — the
                     badge used to be unconditional, so a lesson you'd already
@@ -432,17 +485,19 @@ export default function HomeScreen() {
                 >
                   {continueLesson?.title ?? 'Pick a lesson to begin'}
                 </Text>
-                <Text
-                  style={{
-                    fontFamily: 'Caveat_400Regular',
-                    fontSize: 16,
-                    // Marco's line is clay in the design, not warm grey.
-                    color: C.clay,
-                    marginTop: 2,
-                  }}
-                >
-                  {lessonQuote}
-                </Text>
+                {lessonQuote ? (
+                  <Text
+                    style={{
+                      fontFamily: 'Caveat_400Regular',
+                      fontSize: 16,
+                      // Marco's line is clay in the design, not warm grey.
+                      color: C.clay,
+                      marginTop: 2,
+                    }}
+                  >
+                    {lessonQuote}
+                  </Text>
+                ) : null}
               </View>
             </Pressable>
 

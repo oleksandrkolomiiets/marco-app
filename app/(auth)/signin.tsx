@@ -126,9 +126,12 @@ export default function SignInScreen() {
               }
             />
 
-            <Pressable style={styles.forgotWrap}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
-            </Pressable>
+            {/* No "Forgot password?" link until there is a reset flow behind
+                it. The Pressable that used to sit here had no onPress at all,
+                so the one person who most needs it — locked out of their own
+                account — tapped an underlined link and got nothing. There is
+                no /auth/reset endpoint and no mail sender; an absent link at
+                least sends them to "Create account" instead of a dead end. */}
           </View>
 
           <View style={{ flex: 1 }} />
@@ -186,13 +189,6 @@ const styles = {
   },
   form: { paddingTop: 22 },
   eyeToggle: { fontSize: 13, fontWeight: '500' as const, color: colors.inkSoft },
-  forgotWrap: { alignSelf: 'flex-end' as const, marginTop: -4 },
-  forgotText: {
-    fontSize: 13.5,
-    fontWeight: '600' as const,
-    color: colors.ink,
-    textDecorationLine: 'underline' as const,
-  },
   footer: { alignItems: 'center' as const, paddingTop: 20 },
   footerText: { fontSize: 13.5, color: colors.inkSoft },
   footerLink: {

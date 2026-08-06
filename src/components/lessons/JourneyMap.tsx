@@ -154,6 +154,14 @@ export const JourneyMap = ({
           strokeLinecap="round"
         />
 
+        {/* The little ball and its "start!" caption sit directly under the
+            first node — which is where LessonNode draws "you are here ↑" for
+            the player who hasn't finished a lesson yet. On a brand-new account
+            the two collided: the caption ran straight through the ball, with
+            "start!" jammed under it and the speech bubble already saying "Tap
+            to start ↑". Once the player is past lesson one the marker has the
+            space to itself again. */}
+        {currentIndex === 0 ? null : (
         <G>
           <Circle
             cx={LEFT_X}
@@ -188,6 +196,7 @@ export const JourneyMap = ({
             start!
           </SvgText>
         </G>
+        )}
 
         {stageLabels.map((s, idx) => (
           <SvgText
