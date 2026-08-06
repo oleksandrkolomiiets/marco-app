@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMatches } from '@/hooks/useMatches';
 import {
+  preparationHeadline,
   useDeleteMatchPreparation,
   useReplaceDrills,
   useSuggestPreparationDrills,
@@ -237,10 +238,7 @@ function SheetBody({
     }
   }, [preparation.id, preparation.drills, preparation.note]);
 
-  const headline =
-    preparation.opponents.length > 0
-      ? preparation.opponents.join(' & ')
-      : 'Upcoming match';
+  const headline = preparationHeadline(preparation.opponents);
 
   const dateLine = `${formatLongDate(preparation.scheduled_at)} · ${formatTime(preparation.scheduled_at)}${preparation.court ? ` · ${preparation.court}` : ''}`;
 
@@ -528,7 +526,9 @@ function SheetBody({
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 10 }}>
-            <Text style={{ fontFamily: F.mono, fontSize: 16, color: C.mute }}>vs</Text>
+            {headline.vs ? (
+              <Text style={{ fontFamily: F.mono, fontSize: 16, color: C.mute }}>vs</Text>
+            ) : null}
             <Text
               style={{
                 // flex:1 so a long opponent name wraps across the allowed two
@@ -542,7 +542,7 @@ function SheetBody({
               }}
               numberOfLines={2}
             >
-              {headline}
+              {headline.title}
             </Text>
           </View>
 

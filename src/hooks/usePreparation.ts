@@ -118,3 +118,17 @@ export const computePreparationStats = (
     planGraded: graded,
   };
 };
+
+/**
+ * How to head a prep: who it's against, or a neutral label when nobody was
+ * named. Three places used to decide this on their own and disagreed — the
+ * list row called an opponent-less prep "vs Match prep", the sheet that opens
+ * from that very row called it "vs Upcoming match", and both kept the "vs"
+ * with nobody on the other side of it.
+ */
+export const preparationHeadline = (
+  opponents: string[],
+): { vs: boolean; title: string } =>
+  opponents.length > 0
+    ? { vs: true, title: opponents.join(' & ') }
+    : { vs: false, title: 'Match prep' };

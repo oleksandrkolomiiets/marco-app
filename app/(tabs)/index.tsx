@@ -16,7 +16,11 @@ import {
 import { useUser } from '@/hooks/useUser';
 import { isLessonCompleted, useLessons } from '@/hooks/useLessons';
 import { useLatestExamAttempt } from '@/hooks/useExam';
-import { useMatchPreparation, useTogglePreparationDrill } from '@/hooks/usePreparation';
+import {
+  preparationHeadline,
+  useMatchPreparation,
+  useTogglePreparationDrill,
+} from '@/hooks/usePreparation';
 import type { Lesson, MatchPreparation } from '@/types/api';
 
 // Hard 2x3 ink offset shared by the quick tiles — `box-shadow: 2px 3px 0` in
@@ -710,8 +714,8 @@ function MatchPreparationCard({
   const done = prep.drills.filter((d) => d.completed).length;
   const total = prep.drills.length;
   const pct = prep.preparation_pct;
-  const opponents =
-    prep.opponents.length > 0 ? `vs ${prep.opponents.join(' & ')}` : 'Match prep';
+  const headline = preparationHeadline(prep.opponents);
+  const opponents = headline.vs ? `vs ${headline.title}` : headline.title;
   const courtLine = [formatPrepTime(prep.scheduled_at), prep.court ?? '']
     .filter(Boolean)
     .join(' · ');

@@ -9,6 +9,7 @@ import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { preparationColors as C, preparationFonts as F, stickerShadow, stickerShadowSm } from '@/components/preparation/theme';
 import {
   computePreparationStats,
+  preparationHeadline,
   useMatchPreparation,
   useUpdateMatchPreparation,
 } from '@/hooks/usePreparation';
@@ -365,10 +366,7 @@ type PrepRowProps = {
 const PrepRow = ({ preparation, upcoming, match, onPress, onSetGrade }: PrepRowProps) => {
   const done = preparation.drills.filter((d) => d.completed).length;
   const total = preparation.drills.length;
-  const headline =
-    preparation.opponents.length > 0
-      ? `vs ${preparation.opponents.join(' & ')}`
-      : 'Match prep';
+  const headline = preparationHeadline(preparation.opponents);
 
   // Past rows show W or L based on the linked match log's result. No link →
   // we still render a neutral white tile rather than the clay PREP one.
@@ -430,12 +428,14 @@ const PrepRow = ({ preparation, upcoming, match, onPress, onSetGrade }: PrepRowP
 
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-          <Text style={{ fontFamily: F.mono, fontSize: 13, color: C.mute }}>vs</Text>
+          {headline.vs ? (
+            <Text style={{ fontFamily: F.mono, fontSize: 13, color: C.mute }}>vs</Text>
+          ) : null}
           <Text
             style={{ fontFamily: F.serif, fontSize: 20, color: C.ink, lineHeight: 22 }}
             numberOfLines={1}
           >
-            {headline.replace(/^vs\s*/, '')}
+            {headline.title}
           </Text>
         </View>
 
