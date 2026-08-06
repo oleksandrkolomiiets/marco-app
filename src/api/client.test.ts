@@ -319,5 +319,45 @@ describe('api client', () => {
         'Request failed with status code 503',
       );
     });
+
+    // A timeout has no response to read a message off, so the fallback above
+    // used to hand the screen axios's own "timeout of 10000ms exceeded" —
+    // which the prep sheet rendered verbatim under OR PICK FROM MARCO.
+    it.each([['ECONNABORTED'], ['ETIMEDOUT']])(
+      'rejects with a readable message when the request times out (%s)',
+      async (code) => {
+        adapter.mockImplementation(async (config) => {
+          throw new AxiosError(
+            'timeout of 10000ms exceeded',
+            code,
+            config,
+            undefined,
+            undefined,
+          );
+        });
+
+        await expect(api.get('/slow')).rejects.toThrow(
+          'That took too long to come back. Try again.',
+        );
+      },
+    );
+  });
+
+  describe('per-request config', () => {
+    it('passes a timeout override through to the request', async () => {
+      adapter.mockImplementation(async (config) => ok(config, { ok: true }));
+
+      await api.post('/slow', undefined, { timeout: 45000 });
+
+      expect(adapter.mock.calls[0]?.[0]?.timeout).toBe(45000);
+    });
+
+    it('leaves the default timeout in place when no config is given', async () => {
+      adapter.mockImplementation(async (config) => ok(config, { ok: true }));
+
+      await api.post('/quick');
+
+      expect(adapter.mock.calls[0]?.[0]?.timeout).toBe(10000);
+    });
   });
 });

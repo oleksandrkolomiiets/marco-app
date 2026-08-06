@@ -267,7 +267,11 @@ const StatsHeader = ({ stats }: { stats: ReturnType<typeof computePreparationSta
             lineHeight: 32,
           }}
         >
-          {stats.avgPreparation}%
+          {/* An average over nothing is not 0% — with no preps in the window
+              computePreparationStats returns 0 and this read "0% AVG READY"
+              to someone who had never planned a match. Same call as the
+              profile's win rate. */}
+          {stats.preps > 0 ? `${stats.avgPreparation}%` : '—'}
         </Text>
         <Text
           style={{
@@ -614,9 +618,13 @@ const EmptyState = ({
         marginBottom: 16,
       }}
     >
+      {/* Not the header's slogan again. With no preps the strip above already
+          says "Build a queue, grade the result." in the same hand and the same
+          clay, 300pt up the screen; repeating it here read like a glitch.
+          An empty state should say what the thing is instead. */}
       {filtered
         ? 'Try another filter — or plan the next one.'
-        : '"Build a queue. Grade the result."'}
+        : '"Queue your drills before the match."'}
     </Text>
     <Pressable
       onPress={onCreate}

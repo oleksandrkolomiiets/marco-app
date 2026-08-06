@@ -56,6 +56,16 @@ export function togglePreparationDrill(
   );
 }
 
+// The only endpoint on this screen that waits on Claude rather than Postgres.
+// It answered in 16s on a cold local server while the client's 10s default had
+// already aborted, so the work was done and thrown away and the sheet showed
+// "timeout of 10000ms exceeded" under OR PICK FROM MARCO.
+const SUGGEST_DRILLS_TIMEOUT_MS = 45000;
+
 export function suggestPreparationDrills(id: string): Promise<DrillInput[]> {
-  return api.post(`/api/v1/match-preparation/${id}/suggest-drills`);
+  return api.post(
+    `/api/v1/match-preparation/${id}/suggest-drills`,
+    undefined,
+    { timeout: SUGGEST_DRILLS_TIMEOUT_MS },
+  );
 }

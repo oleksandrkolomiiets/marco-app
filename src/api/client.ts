@@ -1,5 +1,6 @@
 import axios, {
   type AxiosError,
+  type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
@@ -15,6 +16,20 @@ const CREDENTIAL_ENDPOINTS = ['/auth/signin', '/auth/signup', '/auth/google'];
 
 const isCredentialEndpoint = (url: string | undefined): boolean =>
   url !== undefined && CREDENTIAL_ENDPOINTS.some((path) => url.includes(path));
+
+// axios reports a timeout as "timeout of 10000ms exceeded", and every screen
+// renders whatever message it gets straight into the UI. Nobody should read a
+// millisecond count off a prep sheet.
+const TIMEOUT_MESSAGE = 'That took too long to come back. Try again.';
+
+const messageFor = (error: AxiosError<{ error?: string }>): string => {
+  const fromServer = error.response?.data?.error;
+  if (fromServer) return fromServer;
+  if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+    return TIMEOUT_MESSAGE;
+  }
+  return error.message;
+};
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -93,7 +108,7 @@ apiClient.interceptors.response.use(
       // The refresh call itself 401ed — tokens are dead, sign out immediately.
       if (original.url?.includes('/auth/refresh')) {
         useAuthStore.getState().clearAuth();
-        throw new Error(error.response?.data?.error ?? error.message);
+        throw new Error(messageFor(error));
       }
 
       original._retry = true;
@@ -110,18 +125,20 @@ apiClient.interceptors.response.use(
         // Map like every other path — rethrowing the AxiosError here handed
         // callers "Request failed with status code 401" instead of whatever
         // the server actually said.
-        throw new Error(error.response?.data?.error ?? error.message);
+        throw new Error(messageFor(error));
       }
     }
-    throw new Error(error.response?.data?.error ?? error.message);
+    throw new Error(messageFor(error));
   },
 );
 
 export const api = {
   get: <T>(url: string, params?: object): Promise<T> =>
     apiClient.get(url, { params }) as unknown as Promise<T>,
-  post: <T>(url: string, data?: object): Promise<T> =>
-    apiClient.post(url, data) as unknown as Promise<T>,
+  // config is for the handful of endpoints that don't fit the 10s default —
+  // anything that waits on Claude rather than on Postgres.
+  post: <T>(url: string, data?: object, config?: AxiosRequestConfig): Promise<T> =>
+    apiClient.post(url, data, config) as unknown as Promise<T>,
   patch: <T>(url: string, data?: object): Promise<T> =>
     apiClient.patch(url, data) as unknown as Promise<T>,
   delete: <T>(url: string): Promise<T> =>
